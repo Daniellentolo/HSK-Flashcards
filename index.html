@@ -97,6 +97,46 @@
   .empty{text-align:center;padding:60px 20px;color:var(--muted)}
   .empty h3{color:var(--text)}
 
+  /* Edit panel */
+  .edit-btn{background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer}
+  .edit-btn:hover{color:var(--text);border-color:var(--accent)}
+  .edit-panel{width:100%;max-width:520px;margin:14px auto 0;padding:14px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;text-align:left}
+  .edit-panel h4{margin:0 0 8px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+  .edit-panel textarea{width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;min-height:52px;box-sizing:border-box}
+  .edit-panel textarea:focus{outline:none;border-color:var(--accent)}
+  .tone-editor{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;justify-content:center}
+  .tone-cell{display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;user-select:none;padding:4px 6px;border-radius:8px;border:1px solid transparent}
+  .tone-cell:hover{border-color:var(--border);background:rgba(255,255,255,.03)}
+  .tone-cell .tc{font-family:"PingFang SC","Noto Sans CJK SC",serif;font-size:34px;font-weight:700;line-height:1}
+  .tone-cell .tn{font-size:10px;color:var(--muted);letter-spacing:.3px}
+  .edit-panel .row{margin-top:10px}
+  .edit-panel .btns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  .edit-panel .btns button{font-size:12px;padding:6px 14px}
+  .edit-panel .btns .save{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  /* Multiple glosses + sentences */
+  .gloss-list{font-size:17px;color:#e5e7eb;font-weight:500;letter-spacing:.2px;line-height:1.5}
+  .gloss-list > div{margin-top:2px}
+  .gloss-list > div:first-child{font-weight:500}
+  .gloss-list > div:not(:first-child){font-size:14px;color:#b6bdc9;font-weight:400}
+  .sentence-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+
+  /* Clickable characters in sentences */
+  .sentence .sc.han{cursor:pointer;transition:opacity .15s;border-radius:3px}
+  .sentence .sc.han:active,.sentence .sc.han:hover{background:rgba(79,140,255,.15)}
+
+  /* Character lookup popup */
+  .char-pop{position:fixed;z-index:1000;background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;max-width:280px;font-size:13px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+  .char-pop .hd{font-size:22px;font-weight:700;font-family:"PingFang SC","Noto Sans CJK SC",serif;margin-bottom:4px;padding-right:20px}
+  .char-pop .hd .py{font-size:14px;font-weight:500;color:#cbd5e1;margin-left:10px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .char-pop .ent{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.4}
+  .char-pop .ent b{font-family:"PingFang SC","Noto Sans CJK SC",serif;font-size:16px}
+  .char-pop .ent .py{color:#cbd5e1;font-size:12px;margin-left:4px;font-style:normal}
+  .char-pop .ent .gl{color:var(--muted);font-size:12px;margin-top:2px;display:block}
+  .char-pop .cls{position:absolute;top:6px;right:10px;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;user-select:none}
+  .char-pop .cls:hover{color:var(--text)}
+  .char-pop .note{color:var(--muted);font-size:11px;margin-top:6px;font-style:italic}
+
   footer{padding:10px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);flex-wrap:wrap;gap:8px}
   .kbd{background:var(--panel2);border:1px solid var(--border);padding:1px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:10px;color:#cbd5e1}
 
@@ -114,8 +154,8 @@
   <div class="ctrls">
     <div class="stats" id="stats"></div>
     <button class="ghost" id="restartBtn" title="Change deck" style="display:none">⚙︎ Deck</button>
-    <button class="ghost" id="exportImgBtn" title="Download all your pictures as a backup file">↥ Export pics</button>
-    <button class="ghost" id="importImgBtn" title="Load pictures from a backup file">↧ Import pics</button>
+    <button class="ghost" id="exportImgBtn" title="Download a backup of your pictures and card edits">↥ Backup</button>
+    <button class="ghost" id="importImgBtn" title="Restore pictures and card edits from a backup file">↧ Restore</button>
     <input type="file" id="importImgFile" accept="application/json,.json" style="display:none">
     <button class="ghost" id="resetBtn" title="Reset all progress">⟲ Reset</button>
   </div>
@@ -161,6 +201,7 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
   const STATE_KEY = "hsk_srs_v1";
   const SETTINGS_KEY = "hsk_settings_v1";
   const IMG_KEY = "hsk_imgs_v1";
+  const EDIT_KEY = "hsk_edits_v1";
 
   // SRS state per card: {id: {due: ts, interval_days, ease, reps}}
   function loadState(){ try{return JSON.parse(localStorage.getItem(STATE_KEY))||{}}catch(e){return {}} }
@@ -177,10 +218,34 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
       return false;
     }
   }
+  // User edits per card: {id: {tones:[..], glosses:[..], sentences:[..]}}
+  function loadEdits(){ try{return JSON.parse(localStorage.getItem(EDIT_KEY))||{}}catch(e){return {}} }
+  function saveEditsObj(m){
+    try{ localStorage.setItem(EDIT_KEY, JSON.stringify(m)); return true; }
+    catch(e){ alert("Storage full. Try removing some pictures to free space."); return false; }
+  }
 
   const state = loadState();
   let settings = loadSettings();
   const imgs = loadImgs();
+  const edits = loadEdits();
+
+  // ---- Edit accessors ----
+  function getTones(w){
+    const e = edits[w.id];
+    if (e && Array.isArray(e.tones) && e.tones.length === Array.from(w.hanzi).length) return e.tones;
+    return w.tones;
+  }
+  function getGlosses(w){
+    const e = edits[w.id];
+    const extras = (e && Array.isArray(e.glosses)) ? e.glosses.filter(g => g && g.trim()) : [];
+    return [w.gloss || "", ...extras].filter(g => g);
+  }
+  function getSentences(w){
+    const e = edits[w.id];
+    const extras = (e && Array.isArray(e.sentences)) ? e.sentences.filter(s => s && s.trim()) : [];
+    return [w.sentence || "", ...extras].filter(s => s);
+  }
   let session = {queue:[], idx:0, current:null, showBack:false, sessionSize:20};
 
   // ---- Card rendering helpers ----
@@ -192,13 +257,12 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     }).join("");
   }
   function renderSentence(text){
-    // Color each CJK char by its tone (look up via quick per-char tone table), fall back neutral.
-    // Simpler: render text with per-char coloring using DATA index by character if available; else plain
+    // Color each CJK char by its tone; non-CJK is plain. CJK chars get .han so taps trigger a lookup popup.
     const out = [];
     for (const c of Array.from(text)){
       if (/[\u4e00-\u9fff]/.test(c)){
         const t = CHAR_TONE.get(c) || 5;
-        out.push(`<span class="sc ${TONE_CLASS[t]}">${escapeHtml(c)}</span>`);
+        out.push(`<span class="sc han ${TONE_CLASS[t]}" data-ch="${escapeHtml(c)}">${escapeHtml(c)}</span>`);
       } else {
         out.push(`<span class="sc" style="color:#cbd5e1">${escapeHtml(c)}</span>`);
       }
@@ -206,6 +270,24 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     return out.join("");
   }
   function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+  // Convert "ni3" → "nǐ", "hao3" → "hǎo", "ma5" → "ma", etc.
+  function toneAccent(syl){
+    if (!syl) return "";
+    const m = String(syl).match(/^([a-zü]+)([1-5]?)$/i);
+    if (!m) return syl;
+    const base = m[1]; const t = parseInt(m[2]||"5");
+    if (!t || t===5) return base;
+    const acc = {a:["ā","á","ǎ","à"],e:["ē","é","ě","è"],i:["ī","í","ǐ","ì"],o:["ō","ó","ǒ","ò"],u:["ū","ú","ǔ","ù"],"ü":["ǖ","ǘ","ǚ","ǜ"],v:["ǖ","ǘ","ǚ","ǜ"]};
+    let idx = base.indexOf("a");
+    if (idx<0) idx = base.indexOf("e");
+    if (idx<0 && base.indexOf("ou")>=0) idx = base.indexOf("ou");
+    if (idx<0){ for (let i=base.length-1;i>=0;i--){ if ("aeiouüv".indexOf(base[i].toLowerCase())>=0){ idx=i; break; }}}
+    if (idx<0) return base;
+    const c = base[idx].toLowerCase();
+    if (!acc[c]) return base;
+    return base.substring(0,idx) + acc[c][t-1] + base.substring(idx+1);
+  }
 
   // Build a char->tone map from DATA (uses first syllable tone per char where available)
   const CHAR_TONE = new Map();
@@ -215,6 +297,24 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
       for (let i=0;i<chars.length;i++){
         const c = chars[i], t = w.tones[i];
         if (!CHAR_TONE.has(c) && t) CHAR_TONE.set(c, t);
+      }
+    }
+  })();
+
+  // Richer char -> info map for the sentence lookup popup.
+  // Per char: pinyins set, tones set, wordIdx list (first few DATA entries containing it).
+  const CHAR_INFO = new Map();
+  (function buildCharInfo(){
+    for (let wi=0; wi<DATA.length; wi++){
+      const w = DATA[wi];
+      const chars = Array.from(w.hanzi);
+      for (let i=0;i<chars.length;i++){
+        const c = chars[i];
+        if (!CHAR_INFO.has(c)) CHAR_INFO.set(c, {tones:new Set(), pinyins:new Set(), wordIdx:[]});
+        const info = CHAR_INFO.get(c);
+        if (w.tones[i]) info.tones.add(w.tones[i]);
+        if (w.pinyin[i]) info.pinyins.add(w.pinyin[i]);
+        if (info.wordIdx.length < 5 && info.wordIdx.indexOf(wi) < 0) info.wordIdx.push(wi);
       }
     }
   })();
@@ -313,7 +413,7 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     const audioBtn = w.path
       ? `<button class="audio-btn" id="playBtn" title="Play audio">▶︎</button>`
       : `<div class="note" style="margin-top:0">${w.level==="grammar"?"grammar pattern":"measure word"}</div>`;
-    const front = `<div class="hanzi">${renderHanzi(w.hanzi, w.tones)}</div>
+    const front = `<div class="hanzi">${renderHanzi(w.hanzi, getTones(w))}</div>
                    ${audioBtn}`;
     let back = "";
     if (session.showBack){
@@ -321,16 +421,21 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
       const imgBlock = userImg
         ? `<img class="user-img" src="${userImg}" alt="">`
         : (w.emoji ? `<div class="emoji-big">${w.emoji}</div>` : "");
-      const ctrls = userImg
+      const imgCtrls = userImg
         ? `<button id="changeImgBtn">Change pic</button><button id="removeImgBtn">Remove</button>`
         : `<button id="addImgBtn">📷 Add picture</button>`;
+      const glosses = getGlosses(w);
+      const sentences = getSentences(w);
+      const glossHtml = glosses.map(g=>`<div>${escapeHtml(g)}</div>`).join("");
+      const sentHtml = sentences.map(s=>`<div class="sentence">${renderSentence(s)}</div>`).join("");
       back = `
         <div class="meaning">
           ${imgBlock}
-          <div class="gloss">${escapeHtml(w.gloss||"")}</div>
-          <div class="img-ctrls">${ctrls}</div>
+          <div class="gloss-list">${glossHtml}</div>
+          <div class="img-ctrls">${imgCtrls}<button class="edit-btn" id="editCardBtn">✎ Edit card</button></div>
         </div>
-        <div class="sentence">${renderSentence(w.sentence||"")}</div>
+        <div class="sentence-list">${sentHtml}</div>
+        <div id="editPanelSlot"></div>
         <input type="file" id="imgFileInput" accept="image/*" style="display:none">
       `;
     }
@@ -346,6 +451,16 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     `;
     const playBtn = document.getElementById("playBtn");
     if (playBtn) playBtn.addEventListener("click",()=>playAudio(w));
+    // Edit panel trigger
+    const editBtn = document.getElementById("editCardBtn");
+    if (editBtn) editBtn.addEventListener("click", ()=>renderEditPanel(w));
+    // Tap any CJK char in a sentence -> pop up pinyin + related words
+    cardArea.querySelectorAll(".sentence .sc.han").forEach(el=>{
+      el.addEventListener("click", (ev)=>{
+        ev.stopPropagation();
+        showCharPopup(el.dataset.ch || el.textContent, el);
+      });
+    });
     // Image controls (only present on the back)
     const fileInput = document.getElementById("imgFileInput");
     const pickImg = ()=> fileInput && fileInput.click();
@@ -467,12 +582,14 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     });
   }
   function exportImages(){
-    const blob = new Blob([JSON.stringify(imgs)], {type:"application/json"});
+    // v2 backup format: { version:2, images:{...}, edits:{...} }
+    const payload = { version: 2, images: imgs, edits: edits };
+    const blob = new Blob([JSON.stringify(payload)], {type:"application/json"});
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     const d = new Date();
-    a.download = `hsk-pictures-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}.json`;
+    a.download = `hsk-backup-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
@@ -482,18 +599,30 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
       try{
         const obj = JSON.parse(r.result);
         if (typeof obj !== "object" || Array.isArray(obj)) throw new Error("Bad format");
-        let added = 0;
-        for (const k in obj){ if (typeof obj[k]==="string"){ imgs[k] = obj[k]; added++; } }
-        if (saveImgs(imgs)){
-          alert(`Imported ${added} picture${added===1?"":"s"}.`);
+        let pics = 0, eds = 0;
+        // v2 (new) format
+        if (obj && (obj.version === 2 || obj.images || obj.edits)){
+          const inImgs = obj.images || {};
+          const inEdits = obj.edits || {};
+          for (const k in inImgs){ if (typeof inImgs[k]==="string"){ imgs[k] = inImgs[k]; pics++; } }
+          for (const k in inEdits){ if (inEdits[k] && typeof inEdits[k]==="object"){ edits[k] = inEdits[k]; eds++; } }
+        } else {
+          // Legacy pics-only format: flat { id: dataURL }
+          for (const k in obj){ if (typeof obj[k]==="string"){ imgs[k] = obj[k]; pics++; } }
+        }
+        const okImgs = saveImgs(imgs);
+        const okEdits = saveEditsObj(edits);
+        if (okImgs && okEdits){
+          alert(`Restored ${pics} picture${pics===1?"":"s"} and ${eds} card edit${eds===1?"":"s"}.`);
           if (session.current) renderCard();
         }
-      }catch(e){ alert("That doesn't look like a valid picture backup file."); }
+      }catch(e){ alert("That doesn't look like a valid backup file."); }
     };
     r.readAsText(file);
   }
 
   function playAudio(w){
+    if (!w.path) return;
     try{
       player.src = encodeURI("./"+w.path);
       const btn = document.getElementById("playBtn");
@@ -503,6 +632,116 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
       player.play().catch(e=>{ if(btn) btn.classList.remove("playing"); });
     }catch(e){}
   }
+
+  // ---- Edit panel ----
+  function renderEditPanel(w){
+    const slot = document.getElementById("editPanelSlot");
+    if (!slot) return;
+    const chars = Array.from(w.hanzi);
+    const curTones = getTones(w).slice();
+    const workingTones = curTones.slice();
+    const extraGlosses = getGlosses(w).slice(1).join("\n");
+    const extraSentences = getSentences(w).slice(1).join("\n");
+    const toneCells = chars.map((c,i)=>{
+      const t = workingTones[i]||5;
+      return `<span class="tone-cell" data-i="${i}">
+        <span class="tc ${TONE_CLASS[t]||"t5"}">${escapeHtml(c)}</span>
+        <span class="tn">tone ${t}</span>
+      </span>`;
+    }).join("");
+    slot.innerHTML = `
+      <div class="edit-panel">
+        <h4>Tone colors — tap a character to cycle 1→2→3→4→5</h4>
+        <div class="tone-editor" id="toneEditor">${toneCells}</div>
+        <div class="row">
+          <h4>Extra meanings (one per line)</h4>
+          <textarea id="glossEdit" rows="3" placeholder="Additional translations, synonyms, notes…">${escapeHtml(extraGlosses)}</textarea>
+        </div>
+        <div class="row">
+          <h4>Extra example sentences (one per line)</h4>
+          <textarea id="sentEdit" rows="3" placeholder="Another sentence using this word…">${escapeHtml(extraSentences)}</textarea>
+        </div>
+        <div class="btns">
+          <button id="editCancel">Cancel</button>
+          <button class="save" id="editSave">Save</button>
+        </div>
+      </div>`;
+    slot.querySelectorAll(".tone-cell").forEach(cell=>{
+      cell.addEventListener("click", ()=>{
+        const i = parseInt(cell.dataset.i);
+        const cur = workingTones[i] || 5;
+        const next = cur >= 5 ? 1 : cur + 1;
+        workingTones[i] = next;
+        const tc = cell.querySelector(".tc");
+        tc.className = "tc " + (TONE_CLASS[next]||"t5");
+        cell.querySelector(".tn").textContent = "tone " + next;
+      });
+    });
+    document.getElementById("editCancel").addEventListener("click", ()=>{ slot.innerHTML = ""; });
+    document.getElementById("editSave").addEventListener("click", ()=>{
+      const newG = document.getElementById("glossEdit").value.split(/\r?\n+/).map(s=>s.trim()).filter(s=>s);
+      const newS = document.getElementById("sentEdit").value.split(/\r?\n+/).map(s=>s.trim()).filter(s=>s);
+      const tonesChanged = workingTones.some((t,i)=>t !== w.tones[i]);
+      const entry = Object.assign({}, edits[w.id] || {});
+      if (tonesChanged) entry.tones = workingTones.slice(); else delete entry.tones;
+      if (newG.length) entry.glosses = newG; else delete entry.glosses;
+      if (newS.length) entry.sentences = newS; else delete entry.sentences;
+      if (Object.keys(entry).length) edits[w.id] = entry; else delete edits[w.id];
+      if (saveEditsObj(edits)){
+        // Update CHAR_TONE so future sentence rendering reflects the fix
+        if (tonesChanged){
+          for (let i=0;i<chars.length;i++){ if (workingTones[i]) CHAR_TONE.set(chars[i], workingTones[i]); }
+        }
+        renderCard();
+      }
+    });
+  }
+
+  // ---- Character lookup popup (Pleco-lite) ----
+  function showCharPopup(char, anchorEl){
+    const existing = document.getElementById("charPop");
+    if (existing) existing.remove();
+    const info = CHAR_INFO.get(char);
+    if (!info){ return; }
+    const pinyinList = [...info.pinyins];
+    const pinyinStr = pinyinList.map(toneAccent).join(" / ") || "";
+    const tonesArr = [...info.tones];
+    const headToneClass = tonesArr.length===1 ? (TONE_CLASS[tonesArr[0]]||"") : "";
+    const words = (info.wordIdx||[]).slice(0,5).map(i=>{
+      const ww = DATA[i];
+      const toneArr = getTones(ww);
+      const pinyin = (ww.pinyin||[]).map(toneAccent).join(" ");
+      return `<div class="ent"><b>${renderHanzi(ww.hanzi, toneArr)}</b><span class="py">${escapeHtml(pinyin)}</span><span class="gl">${escapeHtml((getGlosses(ww)[0])||"")}</span></div>`;
+    }).join("");
+    const pop = document.createElement("div");
+    pop.id = "charPop";
+    pop.className = "char-pop";
+    pop.innerHTML = `
+      <span class="cls" id="charPopClose">✕</span>
+      <div class="hd"><span class="${headToneClass}">${escapeHtml(char)}</span><span class="py">${escapeHtml(pinyinStr)}</span></div>
+      ${words || '<div class="note">This character only appears inside longer words in your deck.</div>'}
+    `;
+    document.body.appendChild(pop);
+    document.getElementById("charPopClose").addEventListener("click", ()=>pop.remove());
+    // Position near the tapped element
+    const rect = anchorEl.getBoundingClientRect();
+    const popRect = pop.getBoundingClientRect();
+    let top = rect.bottom + 8;
+    let left = rect.left + rect.width/2 - popRect.width/2;
+    if (left < 10) left = 10;
+    if (left + popRect.width > window.innerWidth - 10) left = window.innerWidth - popRect.width - 10;
+    if (top + popRect.height > window.innerHeight - 10) top = Math.max(10, rect.top - popRect.height - 8);
+    pop.style.top = top + "px";
+    pop.style.left = left + "px";
+  }
+  // Close popup when tapping outside it
+  document.addEventListener("click", (ev)=>{
+    const pop = document.getElementById("charPop");
+    if (!pop) return;
+    if (pop.contains(ev.target)) return;
+    if (ev.target.closest(".sentence .sc.han")) return;
+    pop.remove();
+  });
 
   // ---- Keyboard ----
   document.addEventListener("keydown",(e)=>{
@@ -520,8 +759,9 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
 
   // ---- Top controls ----
   $("#exportImgBtn").addEventListener("click",()=>{
-    const n = Object.keys(imgs).length;
-    if (n===0){ alert("You haven't added any pictures yet."); return; }
+    const nImgs = Object.keys(imgs).length;
+    const nEdits = Object.keys(edits).length;
+    if (nImgs===0 && nEdits===0){ alert("Nothing to back up yet — no pictures or edits."); return; }
     exportImages();
   });
   $("#importImgBtn").addEventListener("click",()=>$("#importImgFile").click());
@@ -532,12 +772,16 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
   });
 
   resetBtn.addEventListener("click",()=>{
-    if (!confirm("Reset ALL progress? This cannot be undone.")) return;
+    if (!confirm("Reset ALL study progress (SRS)? This cannot be undone.")) return;
     localStorage.removeItem(STATE_KEY);
     for (const k in state) delete state[k];
-    if (Object.keys(imgs).length > 0 && confirm("Also delete your uploaded pictures? (Tip: click Cancel to keep them.)")){
+    if (Object.keys(imgs).length > 0 && confirm("Also delete your uploaded pictures? (Click Cancel to keep them.)")){
       localStorage.removeItem(IMG_KEY);
       for (const k in imgs) delete imgs[k];
+    }
+    if (Object.keys(edits).length > 0 && confirm("Also delete your card edits (tone fixes, extra meanings, extra sentences)? (Click Cancel to keep them.)")){
+      localStorage.removeItem(EDIT_KEY);
+      for (const k in edits) delete edits[k];
     }
     updateStats();
     renderWelcome();
@@ -546,6 +790,14 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
 
   // Assign ids to data (stable)
   DATA.forEach((w,i)=>{ w.id = w.level+"_"+i; });
+
+  // Apply saved tone edits so sentence coloring reflects user fixes from the very first render
+  for (const w of DATA){
+    const e = edits[w.id];
+    if (!e || !Array.isArray(e.tones)) continue;
+    const chars = Array.from(w.hanzi);
+    for (let i=0;i<chars.length;i++){ if (e.tones[i]) CHAR_TONE.set(chars[i], e.tones[i]); }
+  }
 
   // ---- Boot ----
   renderWelcome();
