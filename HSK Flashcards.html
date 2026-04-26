@@ -118,6 +118,51 @@
   .sentence .sc.han{cursor:pointer;transition:opacity .15s;border-radius:3px}
   .sentence .sc.han:active,.sentence .sc.han:hover{background:rgba(79,140,255,.15)}
 
+  /* Writing practice modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);overscroll-behavior:contain}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:16px;max-width:600px;width:100%;max-height:92vh;overflow-y:auto;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .modal-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px}
+  .modal-hd .ttl{font-weight:600;font-size:15px;color:var(--text)}
+  .modal-hd .ttl .py{color:var(--muted);font-size:13px;font-weight:400;margin-left:8px}
+  .modal-hd .close{background:transparent;border:none;color:var(--muted);font-size:22px;padding:2px 8px;cursor:pointer;line-height:1}
+  .modal-hd .close:hover{color:var(--text)}
+  .modal-sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px}
+  .write-chars{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:10px 0}
+  .write-char-slot{background:#fff;border-radius:10px;border:1px solid var(--border);position:relative;overflow:hidden}
+  .write-char-slot::before, .write-char-slot::after{content:"";position:absolute;background:rgba(0,0,0,.07);pointer-events:none}
+  .write-char-slot::before{left:50%;top:0;bottom:0;width:1px;transform:translateX(-.5px)}
+  .write-char-slot::after{top:50%;left:0;right:0;height:1px;transform:translateY(-.5px)}
+  .modal-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+  .modal-actions button{font-size:13px;padding:8px 14px;border-radius:10px}
+  .modal-actions .primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .modal-note{font-size:11px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5}
+  .modal-loading{text-align:center;color:var(--muted);padding:30px 0;font-size:13px}
+
+  /* Standalone writing practice view */
+  .wp{display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 6px 24px}
+  .wp .head{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .wp .ch-mini{font-size:30px;font-family:"PingFang SC","Noto Sans CJK SC",serif;font-weight:600}
+  .wp .py{color:var(--accent2);font-size:18px;font-weight:500}
+  .wp .gl{color:var(--text);font-size:14px;text-align:center;max-width:340px}
+  .wp .badge{font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding:2px 8px;border-radius:6px;background:var(--panel2);color:var(--muted)}
+  .wp .badge.new{background:#1c3a5c;color:#9bc8ff}
+  .wp .badge.review{background:#2b3a1c;color:#bce0a3}
+  .wp .big-slot{background:#fff;border-radius:14px;border:1px solid var(--border);position:relative;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+  .wp .big-slot::before, .wp .big-slot::after{content:"";position:absolute;background:rgba(0,0,0,.07);pointer-events:none;z-index:1}
+  .wp .big-slot::before{left:50%;top:0;bottom:0;width:1px;transform:translateX(-.5px)}
+  .wp .big-slot::after{top:50%;left:0;right:0;height:1px;transform:translateY(-.5px)}
+  .wp .ctrl{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .wp .ctrl button{font-size:13px;padding:9px 14px;border-radius:10px}
+  .wp .ctrl .primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .wp .ctx{width:100%;max-width:380px;border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
+  .wp .ctx h4{margin:0 0 6px 0;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500}
+  .wp .ctx .ent{padding:4px 0;font-size:14px;line-height:1.4}
+  .wp .ctx .ent b{font-family:"PingFang SC","Noto Sans CJK SC",serif;font-size:16px}
+  .wp .ctx .ent .py{color:#cbd5e1;font-size:12px;margin-left:6px;font-weight:400}
+  .wp .ctx .ent .gl{color:var(--muted);font-size:12px;margin-left:6px}
+  .wp .grade-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:420px}
+  .wp .qhint{color:var(--muted);font-size:12px;text-align:center;min-height:18px}
+
   /* Character lookup popup */
   .char-pop{position:fixed;z-index:1000;background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;max-width:280px;font-size:13px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
   .char-pop .hd{font-size:22px;font-weight:700;font-family:"PingFang SC","Noto Sans CJK SC",serif;margin-bottom:4px;padding-right:20px}
@@ -174,6 +219,23 @@
 </footer>
 </div>
 
+<div id="writeModal" class="modal-bg" style="display:none">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="ttl" id="writeTitle">Write</div>
+      <button class="close" id="writeClose">✕</button>
+    </div>
+    <div class="modal-sub" id="writeSub"></div>
+    <div class="write-chars" id="writeChars"></div>
+    <div class="modal-actions">
+      <button class="primary" id="writeAnimate">▷ Show stroke order</button>
+      <button id="writeQuiz">📝 Quiz me</button>
+      <button id="writeReset">↺ Reset</button>
+    </div>
+    <div class="modal-note">Trace each stroke in order. Wrong strokes flash; correct ones stick. Stroke data loads from the internet on first use of a character, then works offline.</div>
+  </div>
+</div>
+
 <audio id="player" preload="none"></audio>
 
 <script>
@@ -195,6 +257,7 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
   const SETTINGS_KEY = "hsk_settings_v1";
   const IMG_KEY = "hsk_imgs_v1";
   const EDIT_KEY = "hsk_edits_v1";
+  const WRITE_KEY = "hsk_write_srs_v1";
 
   // SRS state per card: {id: {due: ts, interval_days, ease, reps}}
   function loadState(){ try{return JSON.parse(localStorage.getItem(STATE_KEY))||{}}catch(e){return {}} }
@@ -217,11 +280,16 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     try{ localStorage.setItem(EDIT_KEY, JSON.stringify(m)); return true; }
     catch(e){ alert("Storage full. Try removing some pictures to free space."); return false; }
   }
+  // Per-character writing-practice SRS: { "你": {due, interval, ease, reps} }
+  function loadWriteState(){ try{return JSON.parse(localStorage.getItem(WRITE_KEY))||{}}catch(e){return {}} }
+  function saveWriteState(m){ try{ localStorage.setItem(WRITE_KEY, JSON.stringify(m)); }catch(e){} }
 
   const state = loadState();
   let settings = loadSettings();
   const imgs = loadImgs();
   const edits = loadEdits();
+  const writeState = loadWriteState();
+  let writeSession = {active:false, queue:[], idx:0, current:null, phase:"idle", writers:[], completed:0};
 
   // ---- Edit accessors ----
   function getTones(w){
@@ -344,7 +412,9 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
 
   function updateStats(){
     const c = countPool();
-    statsEl.innerHTML = `<span>${c.due}</span> due · <span>${c.learned}</span> learned · <span>${c.fresh}</span> new`;
+    const wc = countWritePool();
+    statsEl.innerHTML = `<span>${c.due}</span> due · <span>${c.learned}</span> learned · <span>${c.fresh}</span> new` +
+      (wc.total > 0 ? ` &nbsp;·&nbsp; ✍ <span>${wc.due}</span>/<span>${wc.total}</span>` : "");
   }
 
   // ---- Welcome / level select ----
@@ -363,7 +433,7 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
           <div class="level-card ${sel.has("measure")?"selected":""}" data-lv="measure"><div class="label">量词</div><div class="count">${counts.measure} measure</div></div>
           <div class="level-card ${sel.has("grammar")?"selected":""}" data-lv="grammar"><div class="label">语法</div><div class="count">${counts.grammar} grammar</div></div>
         </div>
-        <div><button class="start-btn" id="startBtn">Start studying</button></div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="start-btn" id="startBtn">Start studying</button><button class="start-btn" id="startWriteBtn" style="background:transparent;border:1px solid var(--accent2);color:var(--accent2)">✍ Writing practice</button></div>
         <div class="legend">
           <span><i style="background:var(--tone1)"></i>Tone 1 (flat)</span>
           <span><i style="background:var(--tone2)"></i>Tone 2 (rising)</span>
@@ -383,6 +453,7 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
       });
     });
     cardArea.querySelector("#startBtn").addEventListener("click",startSession);
+    cardArea.querySelector("#startWriteBtn").addEventListener("click",startWriteSession);
     restartBtn.style.display="none";
     updateStats();
   }
@@ -425,7 +496,7 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
         <div class="meaning">
           ${imgBlock}
           <div class="gloss-list">${glossHtml}</div>
-          <div class="img-ctrls">${imgCtrls}<button class="edit-btn" id="editCardBtn">✎ Edit card</button></div>
+          <div class="img-ctrls">${imgCtrls}<button class="edit-btn" id="editCardBtn">✎ Edit</button>${Array.from(w.hanzi).some(c=>/[\u4e00-\u9fff]/.test(c))?`<button class="edit-btn" id="writeCardBtn">✍ Write</button>`:""}</div>
         </div>
         <div class="sentence-list">${sentHtml}</div>
         <div id="editPanelSlot"></div>
@@ -447,6 +518,9 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     // Edit panel trigger
     const editBtn = document.getElementById("editCardBtn");
     if (editBtn) editBtn.addEventListener("click", ()=>renderEditPanel(w));
+    // Writing practice trigger
+    const writeBtn = document.getElementById("writeCardBtn");
+    if (writeBtn) writeBtn.addEventListener("click", ()=>openWriteModal(w.hanzi, (w.pinyin||[]).map(toneAccent).join(" "), getGlosses(w)[0]||""));
     // Tap any CJK char in a sentence -> pop up pinyin + related words
     cardArea.querySelectorAll(".sentence .sc.han").forEach(el=>{
       el.addEventListener("click", (ev)=>{
@@ -509,6 +583,9 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
 
   function flip(){ session.showBack = true; renderCard(); }
   function nextCard(){
+    // Close any open writing modal when leaving the card
+    const wm = document.getElementById("writeModal");
+    if (wm && wm.style.display !== "none"){ try { closeWriteModal(); } catch(e){} }
     session.idx++;
     if (session.idx >= session.queue.length){
       cardArea.innerHTML = `<div class="empty"><h3>🎉 Session complete!</h3><p>You studied ${session.queue.length} cards.</p><div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="start-btn" id="doMore">Study more</button><button class="reveal" id="doBack">Back to menu</button></div></div>`;
@@ -711,11 +788,16 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     pop.className = "char-pop";
     pop.innerHTML = `
       <span class="cls" id="charPopClose">✕</span>
-      <div class="hd"><span class="${headToneClass}">${escapeHtml(char)}</span><span class="py">${escapeHtml(pinyinStr)}</span></div>
+      <div class="hd"><span class="${headToneClass}">${escapeHtml(char)}</span><span class="py">${escapeHtml(pinyinStr)}</span><button class="edit-btn" id="charPopWrite" style="float:right;font-size:11px;padding:3px 8px;margin-top:2px">✍ Write</button></div>
       ${words || '<div class="note">This character only appears inside longer words in your deck.</div>'}
     `;
     document.body.appendChild(pop);
     document.getElementById("charPopClose").addEventListener("click", ()=>pop.remove());
+    document.getElementById("charPopWrite").addEventListener("click", (ev)=>{
+      ev.stopPropagation();
+      pop.remove();
+      openWriteModal(char, pinyinStr, "");
+    });
     // Position near the tapped element
     const rect = anchorEl.getBoundingClientRect();
     const popRect = pop.getBoundingClientRect();
@@ -736,8 +818,433 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     pop.remove();
   });
 
+  // ---- Handwriting practice (HanziWriter, lazy-loaded) ----
+  let activeWriters = [];
+  let hanziWriterLoading = null;
+
+  function loadHanziWriter(){
+    if (window.HanziWriter) return Promise.resolve(window.HanziWriter);
+    if (hanziWriterLoading) return hanziWriterLoading;
+    hanziWriterLoading = new Promise((resolve, reject)=>{
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/hanzi-writer@3.7/dist/hanzi-writer.min.js";
+      s.async = true;
+      s.onload = ()=>resolve(window.HanziWriter);
+      s.onerror = ()=>{ hanziWriterLoading = null; reject(new Error("Could not load HanziWriter (offline?)")); };
+      document.head.appendChild(s);
+    });
+    return hanziWriterLoading;
+  }
+
+  function disposeWriters(){
+    for (const w of activeWriters){
+      try { if (w && typeof w.cancelQuiz === "function") w.cancelQuiz(); } catch(e){}
+    }
+    activeWriters = [];
+  }
+
+  function pickSlotSize(nChars){
+    // Fit slots to viewport — bigger when there's only 1-2 chars, smaller for 4+
+    const w = Math.min(window.innerWidth - 60, 560);
+    const maxByWidth = Math.floor((w - (nChars-1)*10) / nChars);
+    let target = 150;
+    if (nChars >= 4) target = 110;
+    if (nChars >= 5) target = 90;
+    return Math.max(70, Math.min(target, maxByWidth, 180));
+  }
+
+  function openWriteModal(hanzi, pinyinStr, glossStr){
+    const chars = Array.from(hanzi).filter(c=>/[\u4e00-\u9fff]/.test(c));
+    if (chars.length === 0){ alert("No Chinese characters to practice in this card."); return; }
+    disposeWriters();
+    const modal = document.getElementById("writeModal");
+    const title = document.getElementById("writeTitle");
+    const sub = document.getElementById("writeSub");
+    const wrap = document.getElementById("writeChars");
+    title.textContent = hanzi;
+    sub.innerHTML = `<span style="color:var(--accent2)">${escapeHtml(pinyinStr||"")}</span>${glossStr ? '  ·  ' + escapeHtml(glossStr) : ''}`;
+    const slotSize = pickSlotSize(chars.length);
+    wrap.innerHTML = chars.map((c,i)=>`<div class="write-char-slot" id="ws_${i}" style="width:${slotSize}px;height:${slotSize}px"></div>`).join("");
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+
+    loadHanziWriter().then((HW)=>{
+      activeWriters = chars.map((c,i)=>{
+        const el = document.getElementById("ws_"+i);
+        if (!el) return null;
+        try {
+          return HW.create(el, c, {
+            width: slotSize,
+            height: slotSize,
+            padding: 4,
+            charDataLoader: (charToLoad, onComplete, onErr) => {
+              fetch("https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/" + encodeURIComponent(charToLoad) + ".json")
+                .then(r => { if (!r.ok) throw new Error("no data for "+charToLoad); return r.json(); })
+                .then(onComplete)
+                .catch(e => { console.warn(e); el.innerHTML = '<div style="color:#888;font-size:11px;text-align:center;padding-top:40%">no data</div>'; onErr && onErr(e); });
+            },
+            showCharacter: true,
+            showOutline: true,
+            strokeColor: "#222",
+            outlineColor: "#bbb",
+            radicalColor: "#cc3333",
+            highlightColor: "#4f8cff",
+            drawingColor: "#1a8a36",
+            strokeAnimationSpeed: 1,
+            delayBetweenStrokes: 120
+          });
+        } catch(e){ console.warn("HW create failed for", c, e); return null; }
+      }).filter(Boolean);
+    }).catch(err=>{
+      wrap.innerHTML = `<div class="modal-loading">Could not load handwriting data.<br><small style="opacity:.7">${escapeHtml(err.message||"network error")}</small></div>`;
+    });
+  }
+
+  function closeWriteModal(){
+    disposeWriters();
+    document.getElementById("writeModal").style.display = "none";
+    document.body.style.overflow = "";
+  }
+
+  async function animateAll(){
+    for (const w of activeWriters){
+      try {
+        await new Promise(res => { try { w.animateCharacter({ onComplete: res }); } catch(e){ res(); } });
+      } catch(e){}
+    }
+  }
+
+  function quizAll(){
+    if (activeWriters.length === 0) return;
+    activeWriters.forEach(w=>{ try { w.cancelQuiz(); w.hideCharacter(); } catch(e){} });
+    let i = 0;
+    const startNext = ()=>{
+      if (i >= activeWriters.length) return;
+      const w = activeWriters[i];
+      try {
+        w.quiz({
+          showHintAfterMisses: 3,
+          onComplete: ()=>{ i++; setTimeout(startNext, 250); }
+        });
+      } catch(e){ i++; startNext(); }
+    };
+    startNext();
+  }
+
+  function resetAll(){
+    activeWriters.forEach(w=>{
+      try { w.cancelQuiz(); w.showOutline(); w.showCharacter(); } catch(e){}
+    });
+  }
+
+  document.getElementById("writeClose").addEventListener("click", closeWriteModal);
+  document.getElementById("writeAnimate").addEventListener("click", animateAll);
+  document.getElementById("writeQuiz").addEventListener("click", quizAll);
+  document.getElementById("writeReset").addEventListener("click", resetAll);
+  // Tap backdrop to close
+  document.getElementById("writeModal").addEventListener("click", (ev)=>{
+    if (ev.target.id === "writeModal") closeWriteModal();
+  });
+  // Esc to close
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Escape" && document.getElementById("writeModal").style.display !== "none"){
+      closeWriteModal();
+    }
+  });
+
+  // ---- Standalone writing-practice mode (its own SRS) ----
+  function buildWriteCharPool(){
+    const seen = new Set();
+    const pool = [];
+    for (const w of DATA){
+      if (!settings.levels.includes(w.level)) continue;
+      for (const c of Array.from(w.hanzi)){
+        if (/[\u4e00-\u9fff]/.test(c) && !seen.has(c)){
+          seen.add(c);
+          pool.push(c);
+        }
+      }
+    }
+    return pool;
+  }
+
+  function buildWriteQueue(){
+    const pool = buildWriteCharPool();
+    const now = Date.now();
+    const due = [], fresh = [];
+    for (const c of pool){
+      const s = writeState[c];
+      if (s && s.due && s.due <= now) due.push(c);
+      else if (!s) fresh.push(c);
+    }
+    shuffle(due); shuffle(fresh);
+    // Each session: all due (capped at 30) + up to 8 new chars
+    return [...due.slice(0, 30), ...fresh.slice(0, 8)];
+  }
+
+  function countWritePool(){
+    const pool = buildWriteCharPool();
+    const now = Date.now();
+    let due=0, learned=0, fresh=0;
+    for (const c of pool){
+      const s = writeState[c];
+      if (!s) fresh++;
+      else if (s.due && s.due <= now) due++;
+      else learned++;
+    }
+    return {total:pool.length, due, learned, fresh};
+  }
+
+  function startWriteSession(){
+    const queue = buildWriteQueue();
+    writeSession = {active:true, queue, idx:0, current:null, phase:"idle", writers:[], completed:0};
+    restartBtn.style.display = "";
+    if (queue.length === 0){
+      cardArea.innerHTML = `<div class="empty"><h3>✍ No characters to practice</h3><p>Either nothing's due yet for the levels you've selected, or you haven't enabled any levels with hanzi. Try selecting more levels and come back.</p><div style="margin-top:18px"><button class="start-btn" id="wpBack">Back to menu</button></div></div>`;
+      document.getElementById("wpBack").addEventListener("click", ()=>{ writeSession.active=false; renderWelcome(); });
+      return;
+    }
+    renderWritePractice();
+  }
+
+  function pickBigSlotSize(){
+    const w = Math.min(window.innerWidth - 60, 720);
+    if (w < 360) return 240;
+    if (w < 500) return 280;
+    return 320;
+  }
+
+  function renderWritePractice(){
+    if (writeSession.idx >= writeSession.queue.length){
+      cardArea.innerHTML = `<div class="empty"><h3>✍ Writing session complete</h3><p>You practiced ${writeSession.completed} character${writeSession.completed===1?'':'s'}.</p><div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="start-btn" id="wpMore">Practice more</button><button class="reveal" id="wpHome">Back to menu</button></div></div>`;
+      document.getElementById("wpMore").addEventListener("click", startWriteSession);
+      document.getElementById("wpHome").addEventListener("click", ()=>{ writeSession.active=false; renderWelcome(); });
+      updateStats();
+      return;
+    }
+    const ch = writeSession.queue[writeSession.idx];
+    writeSession.current = ch;
+    writeSession.phase = "idle";
+    // Dispose any earlier writer
+    for (const w of writeSession.writers){ try { w.cancelQuiz(); } catch(e){} }
+    writeSession.writers = [];
+
+    const info = CHAR_INFO.get(ch) || {pinyins:new Set(), tones:new Set(), wordIdx:[]};
+    const pinyinList = [...info.pinyins].map(toneAccent);
+    const pinyinStr = pinyinList.join(" / ");
+    const tones = [...info.tones];
+    const headToneClass = tones.length === 1 ? (TONE_CLASS[tones[0]] || "") : "";
+    // Pull glosses from the first matching word(s)
+    const glosses = [];
+    for (const wi of info.wordIdx){
+      const ww = DATA[wi];
+      if (Array.from(ww.hanzi).length === 1 && ww.hanzi === ch){
+        const g = (getGlosses(ww)[0] || "").trim();
+        if (g && !glosses.includes(g)) glosses.push(g);
+      }
+    }
+    if (glosses.length === 0){
+      // fallback: gloss of any word containing the char
+      for (const wi of info.wordIdx){
+        const g = (getGlosses(DATA[wi])[0] || "").trim();
+        if (g && !glosses.includes(g)) glosses.push(g);
+        if (glosses.length >= 1) break;
+      }
+    }
+    const glossStr = glosses.slice(0, 2).join(" · ");
+
+    const isReview = !!writeState[ch];
+    const badge = isReview
+      ? `<span class="badge review">review</span>`
+      : `<span class="badge new">new</span>`;
+
+    // Context words (other words containing this char)
+    const ctxEntries = (info.wordIdx || []).slice(0, 4).map(i=>{
+      const ww = DATA[i];
+      const py = (ww.pinyin || []).map(toneAccent).join(" ");
+      const gl = (getGlosses(ww)[0] || "").trim();
+      return `<div class="ent"><b>${renderHanzi(ww.hanzi, getTones(ww))}</b><span class="py">${escapeHtml(py)}</span><span class="gl">${escapeHtml(gl)}</span></div>`;
+    }).join("");
+
+    const slotSize = pickBigSlotSize();
+    const bar = Math.round((writeSession.idx / writeSession.queue.length) * 100);
+
+    cardArea.innerHTML = `
+      <div class="wp">
+        <div class="head">
+          ${badge}
+          <div class="ch-mini ${headToneClass}">${escapeHtml(ch)}</div>
+          <div class="py">${escapeHtml(pinyinStr)}</div>
+          <div class="gl">${escapeHtml(glossStr)}</div>
+        </div>
+        <div class="big-slot" id="wpSlot" style="width:${slotSize}px;height:${slotSize}px"></div>
+        <div class="qhint" id="wpHint">${isReview ? "Tap Quiz me to test yourself, or Show stroke order if you need a refresher." : "New character — watch the stroke order, then quiz yourself."}</div>
+        <div class="ctrl" id="wpCtrl">
+          <button class="primary" id="wpAnimate">▷ Show stroke order</button>
+          <button id="wpQuiz">📝 Quiz me</button>
+          <button id="wpShow">👁 Show character</button>
+          <button id="wpSkip">↷ Skip</button>
+        </div>
+        ${ctxEntries ? `<div class="ctx"><h4>In your deck</h4>${ctxEntries}</div>` : ""}
+        <div style="width:100%;max-width:420px">
+          <div class="bar"><i style="width:${bar}%"></i></div>
+          <div class="note">${writeSession.idx + 1} / ${writeSession.queue.length} in session · WRITING</div>
+        </div>
+      </div>
+    `;
+
+    // Lazy-load HanziWriter and create the writer for this character
+    const slot = document.getElementById("wpSlot");
+    slot.innerHTML = '<div class="modal-loading">Loading…</div>';
+    loadHanziWriter().then((HW)=>{
+      slot.innerHTML = "";
+      try {
+        const writer = HW.create(slot, ch, {
+          width: slotSize,
+          height: slotSize,
+          padding: 6,
+          charDataLoader: (charToLoad, onComplete, onErr) => {
+            fetch("https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/" + encodeURIComponent(charToLoad) + ".json")
+              .then(r => { if (!r.ok) throw new Error("no data"); return r.json(); })
+              .then(onComplete)
+              .catch(e => { slot.innerHTML = '<div style="color:#888;text-align:center;padding-top:40%">stroke data not available for this character</div>'; onErr && onErr(e); });
+          },
+          showCharacter: false,         // hide char by default - they should attempt to write it
+          showOutline: isReview,        // show outline for review (gentle hint), hide for new (after animation)
+          strokeColor: "#222",
+          outlineColor: "#bbb",
+          radicalColor: "#c33",
+          highlightColor: "#4f8cff",
+          drawingColor: "#1a8a36",
+          strokeAnimationSpeed: 1,
+          delayBetweenStrokes: 130
+        });
+        writeSession.writers = [writer];
+        if (!isReview){
+          // For new characters, auto-animate the stroke order once
+          setTimeout(()=>{ try { writer.animateCharacter(); } catch(e){} }, 250);
+        }
+      } catch(e){
+        slot.innerHTML = '<div style="color:#888;text-align:center;padding-top:40%">could not load this character</div>';
+      }
+    }).catch(err=>{
+      slot.innerHTML = `<div style="color:#888;text-align:center;padding-top:38%">${escapeHtml(err.message||"network error")}</div>`;
+    });
+
+    // Wire control buttons
+    document.getElementById("wpAnimate").addEventListener("click", ()=>{
+      const wr = writeSession.writers[0]; if (!wr) return;
+      try { wr.cancelQuiz(); wr.showCharacter(); wr.animateCharacter(); } catch(e){}
+    });
+    document.getElementById("wpQuiz").addEventListener("click", startWriteQuiz);
+    document.getElementById("wpShow").addEventListener("click", ()=>{
+      const wr = writeSession.writers[0]; if (!wr) return;
+      try { wr.cancelQuiz(); wr.showOutline(); wr.showCharacter(); } catch(e){}
+    });
+    document.getElementById("wpSkip").addEventListener("click", ()=>{
+      writeSession.idx++;
+      renderWritePractice();
+    });
+  }
+
+  function startWriteQuiz(){
+    const wr = writeSession.writers[0];
+    if (!wr){ return; }
+    writeSession.phase = "quiz";
+    const hint = document.getElementById("wpHint");
+    if (hint) hint.textContent = "Trace each stroke in order. Wrong strokes flash; correct ones stick.";
+    try {
+      wr.cancelQuiz();
+      wr.hideCharacter();
+      wr.hideOutline();
+      let mistakes = 0;
+      wr.quiz({
+        showHintAfterMisses: 3,
+        onMistake: ()=>{ mistakes++; },
+        onComplete: ()=>{
+          writeSession.phase = "graded";
+          showGradeButtons(mistakes);
+        }
+      });
+    } catch(e){ console.warn(e); }
+  }
+
+  function showGradeButtons(mistakes){
+    const ctrl = document.getElementById("wpCtrl");
+    const hint = document.getElementById("wpHint");
+    if (hint){
+      hint.textContent = mistakes === 0
+        ? "✓ Done with no mistakes. How well did you know it?"
+        : `Done with ${mistakes} mistake${mistakes===1?'':'s'}. How well did you know it?`;
+    }
+    const ch = writeSession.current;
+    const s = writeState[ch] || {interval:0, ease:2.5, reps:0};
+    const goodI = s.reps === 0 ? 1 : Math.max(1, Math.round(s.interval * s.ease));
+    const easyI = Math.max(3, Math.round(goodI * 1.3));
+    if (ctrl){
+      ctrl.innerHTML = `
+        <div class="grade-row">
+          <button class="grade again" data-g="0"><div>Again</div><div class="k">&lt;1m</div></button>
+          <button class="grade hard"  data-g="1"><div>Hard</div><div class="k">~10m</div></button>
+          <button class="grade good"  data-g="2"><div>Good</div><div class="k">${humanD(goodI)}</div></button>
+          <button class="grade easy"  data-g="3"><div>Easy</div><div class="k">${humanD(easyI)}</div></button>
+        </div>
+      `;
+      ctrl.querySelectorAll(".grade").forEach(b=>{
+        b.addEventListener("click", ()=>gradeWriteChar(parseInt(b.dataset.g)));
+      });
+    }
+    // Reveal the character so the user can compare their attempt
+    const wr = writeSession.writers[0];
+    if (wr){ try { wr.showCharacter(); wr.showOutline(); } catch(e){} }
+  }
+
+  function gradeWriteChar(g){
+    const ch = writeSession.current;
+    if (!ch) return;
+    const now = Date.now();
+    const DAY = 86400000;
+    let s = writeState[ch] || {interval:0, ease:2.5, reps:0, due:now};
+    if (g === 0){
+      s.reps = 0; s.interval = 0; s.due = now + 60*1000; s.ease = Math.max(1.3, s.ease - 0.2);
+    } else if (g === 1){
+      s.interval = Math.max(1/144, (s.interval || 0) * 1.2 || 1/144);
+      s.due = now + s.interval * DAY;
+      s.ease = Math.max(1.3, s.ease - 0.15);
+    } else if (g === 2){
+      s.reps += 1;
+      s.interval = s.reps === 1 ? 1 : (s.reps === 2 ? 3 : s.interval * s.ease);
+      s.due = now + s.interval * DAY;
+    } else {
+      s.reps += 1;
+      s.interval = s.reps === 1 ? 3 : (s.interval || 1) * s.ease * 1.3;
+      s.ease = s.ease + 0.05;
+      s.due = now + s.interval * DAY;
+    }
+    writeState[ch] = s;
+    saveWriteState(writeState);
+    writeSession.completed++;
+    writeSession.idx++;
+    renderWritePractice();
+  }
+
   // ---- Keyboard ----
   document.addEventListener("keydown",(e)=>{
+    // Writing-practice mode shortcuts
+    if (writeSession && writeSession.active && writeSession.current){
+      if (e.key===" " || e.key==="Enter"){
+        e.preventDefault();
+        if (writeSession.phase === "graded") return; // wait for grade choice
+        if (writeSession.phase === "quiz") return;   // already quizzing
+        startWriteQuiz();
+        return;
+      }
+      if (writeSession.phase === "graded" && ["1","2","3","4"].includes(e.key)){
+        gradeWriteChar(parseInt(e.key)-1);
+        return;
+      }
+      return;
+    }
     if (!session.current) return;
     if (e.key===" " || e.key==="Enter"){
       e.preventDefault();
@@ -765,9 +1272,13 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
   });
 
   resetBtn.addEventListener("click",()=>{
-    if (!confirm("Reset ALL study progress (SRS)? This cannot be undone.")) return;
+    if (!confirm("Reset ALL flashcard study progress (SRS)? This cannot be undone.")) return;
     localStorage.removeItem(STATE_KEY);
     for (const k in state) delete state[k];
+    if (Object.keys(writeState).length > 0 && confirm("Also reset writing-practice progress (per-character SRS)? (Click Cancel to keep it.)")){
+      localStorage.removeItem(WRITE_KEY);
+      for (const k in writeState) delete writeState[k];
+    }
     if (Object.keys(imgs).length > 0 && confirm("Also delete your uploaded pictures? (Click Cancel to keep them.)")){
       localStorage.removeItem(IMG_KEY);
       for (const k in imgs) delete imgs[k];
@@ -779,7 +1290,13 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     updateStats();
     renderWelcome();
   });
-  restartBtn.addEventListener("click",()=>{ renderWelcome(); });
+  restartBtn.addEventListener("click",()=>{
+    if (writeSession && writeSession.active){
+      for (const w of writeSession.writers){ try { w.cancelQuiz(); } catch(e){} }
+      writeSession.active = false; writeSession.writers = []; writeSession.current = null;
+    }
+    renderWelcome();
+  });
 
   // Assign ids to data (stable)
   DATA.forEach((w,i)=>{ w.id = w.level+"_"+i; });
