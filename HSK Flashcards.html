@@ -106,6 +106,13 @@
   .edit-panel .btns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
   .edit-panel .btns button{font-size:12px;padding:6px 14px}
   .edit-panel .btns .save{background:var(--accent);border-color:var(--accent);color:#fff}
+  .edit-row{display:flex;gap:6px;align-items:stretch;margin-bottom:6px}
+  .edit-row .edit-input{flex:1;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;box-sizing:border-box;min-width:0}
+  .edit-row .edit-input:focus{outline:none;border-color:var(--accent)}
+  .edit-row .row-del{flex:0 0 auto;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--muted);width:32px;border-radius:8px;cursor:pointer;font-size:18px;line-height:1;padding:0}
+  .edit-row .row-del:hover{color:#fda4af;border-color:#fda4af}
+  .add-row{margin-top:4px;background:transparent;border:1px dashed var(--border);color:var(--muted);font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;width:100%}
+  .add-row:hover{color:var(--accent);border-color:var(--accent)}
 
   /* Multiple glosses + sentences */
   .gloss-list{font-size:17px;color:#e5e7eb;font-weight:500;letter-spacing:.2px;line-height:1.5}
@@ -166,6 +173,9 @@
   /* Character lookup popup */
   .char-pop{position:fixed;z-index:1000;background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;max-width:280px;font-size:13px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
   .char-pop .hd{font-size:22px;font-weight:700;font-family:"PingFang SC","Noto Sans CJK SC",serif;margin-bottom:4px;padding-right:20px}
+  .char-pop .hd-char{cursor:pointer;user-select:none;border-bottom:1px dashed transparent;padding:0 2px;border-radius:4px}
+  .char-pop .hd-char:hover{background:rgba(255,255,255,.06);border-bottom-color:currentColor}
+  .char-pop .gl{color:var(--text);font-size:13px;margin-top:4px;line-height:1.35}
   .char-pop .hd .py{font-size:14px;font-weight:500;color:#cbd5e1;margin-left:10px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
   .char-pop .ent{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.4}
   .char-pop .ent b{font-family:"PingFang SC","Noto Sans CJK SC",serif;font-size:16px}
@@ -258,6 +268,7 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
   const IMG_KEY = "hsk_imgs_v1";
   const EDIT_KEY = "hsk_edits_v1";
   const WRITE_KEY = "hsk_write_srs_v1";
+  const CHAR_TONE_KEY = "hsk_char_tones_v1"; // global per-character tone overrides {char: tone}
 
   // SRS state per card: {id: {due: ts, interval_days, ease, reps}}
   function loadState(){ try{return JSON.parse(localStorage.getItem(STATE_KEY))||{}}catch(e){return {}} }
@@ -283,15 +294,23 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
   // Per-character writing-practice SRS: { "你": {due, interval, ease, reps} }
   function loadWriteState(){ try{return JSON.parse(localStorage.getItem(WRITE_KEY))||{}}catch(e){return {}} }
   function saveWriteState(m){ try{ localStorage.setItem(WRITE_KEY, JSON.stringify(m)); }catch(e){} }
+  // Global per-character tone overrides {char: tone}. Drives sentence coloring everywhere.
+  function loadCharTones(){ try{return JSON.parse(localStorage.getItem(CHAR_TONE_KEY))||{}}catch(e){return {}} }
+  function saveCharTonesObj(m){ try{ localStorage.setItem(CHAR_TONE_KEY, JSON.stringify(m)); }catch(e){} }
 
   const state = loadState();
   let settings = loadSettings();
   const imgs = loadImgs();
   const edits = loadEdits();
   const writeState = loadWriteState();
+  const charToneOverrides = loadCharTones();
   let writeSession = {active:false, queue:[], idx:0, current:null, phase:"idle", writers:[], completed:0};
 
   // ---- Edit accessors ----
+  // Edits per card use the FULL replacement model:
+  //   - If edits[id].glosses is an array, that's the complete list (could be empty -> user removed everything).
+  //   - If undefined, fall back to the original [w.gloss].
+  // Same for sentences. This lets the user edit/remove the original AND add extras.
   function getTones(w){
     const e = edits[w.id];
     if (e && Array.isArray(e.tones) && e.tones.length === Array.from(w.hanzi).length) return e.tones;
@@ -299,13 +318,13 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
   }
   function getGlosses(w){
     const e = edits[w.id];
-    const extras = (e && Array.isArray(e.glosses)) ? e.glosses.filter(g => g && g.trim()) : [];
-    return [w.gloss || "", ...extras].filter(g => g);
+    if (e && Array.isArray(e.glosses)) return e.glosses.filter(g => g && g.trim());
+    return [w.gloss || ""].filter(g => g);
   }
   function getSentences(w){
     const e = edits[w.id];
-    const extras = (e && Array.isArray(e.sentences)) ? e.sentences.filter(s => s && s.trim()) : [];
-    return [w.sentence || "", ...extras].filter(s => s);
+    if (e && Array.isArray(e.sentences)) return e.sentences.filter(s => s && s.trim());
+    return [w.sentence || ""].filter(s => s);
   }
   let session = {queue:[], idx:0, current:null, showBack:false, sessionSize:20};
 
@@ -318,18 +337,46 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     }).join("");
   }
   function renderSentence(text){
-    // Color each CJK char by its tone; non-CJK is plain. CJK chars get .han so taps trigger a lookup popup.
+    // Greedy longest-match segmentation against the hanzi index, so taps reveal whole words
+    // when applicable. Each CJK glyph still gets its own span (so per-char tone color works),
+    // but spans inside a multi-char word share the same data-word-idx.
+    const chars = Array.from(text);
     const out = [];
-    for (const c of Array.from(text)){
-      if (/[\u4e00-\u9fff]/.test(c)){
+    let i = 0;
+    while (i < chars.length){
+      const c = chars[i];
+      if (!/[\u4e00-\u9fff]/.test(c)){
+        out.push(`<span class="sc" style="color:#cbd5e1">${escapeHtml(c)}</span>`);
+        i++;
+        continue;
+      }
+      // Try lengths 5..2 for a multi-char word starting at i
+      let wordIdx = -1, wordLen = 0;
+      const remaining = chars.length - i;
+      for (let L = Math.min(5, remaining); L >= 2; L--){
+        const cand = chars.slice(i, i+L).join("");
+        if (HANZI_INDEX.has(cand)){ wordIdx = HANZI_INDEX.get(cand); wordLen = L; break; }
+      }
+      if (wordIdx >= 0){
+        const ww = DATA[wordIdx];
+        const wTones = getTones(ww);
+        for (let k = 0; k < wordLen; k++){
+          const cc = chars[i+k];
+          const t = wTones[k] || CHAR_TONE.get(cc) || 5;
+          out.push(`<span class="sc han ${TONE_CLASS[t]}" data-ch="${escapeHtml(cc)}" data-word-idx="${wordIdx}">${escapeHtml(cc)}</span>`);
+        }
+        i += wordLen;
+      } else {
         const t = CHAR_TONE.get(c) || 5;
         out.push(`<span class="sc han ${TONE_CLASS[t]}" data-ch="${escapeHtml(c)}">${escapeHtml(c)}</span>`);
-      } else {
-        out.push(`<span class="sc" style="color:#cbd5e1">${escapeHtml(c)}</span>`);
+        i++;
       }
     }
     return out.join("");
   }
+
+  // Hanzi -> DATA index (built once after DATA is loaded). Used for sentence segmentation.
+  const HANZI_INDEX = new Map();
   function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 
   // Convert "ni3" → "nǐ", "hao3" → "hǎo", "ma5" → "ma", etc.
@@ -369,6 +416,9 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     for (let wi=0; wi<DATA.length; wi++){
       const w = DATA[wi];
       const chars = Array.from(w.hanzi);
+      // Index multi-char words for sentence segmentation. Prefer the first
+      // occurrence so deterministic; could later prioritize by HSK level.
+      if (chars.length >= 2 && !HANZI_INDEX.has(w.hanzi)) HANZI_INDEX.set(w.hanzi, wi);
       for (let i=0;i<chars.length;i++){
         const c = chars[i];
         if (!CHAR_INFO.has(c)) CHAR_INFO.set(c, {tones:new Set(), pinyins:new Set(), wordIdx:[]});
@@ -521,11 +571,16 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     // Writing practice trigger
     const writeBtn = document.getElementById("writeCardBtn");
     if (writeBtn) writeBtn.addEventListener("click", ()=>openWriteModal(w.hanzi, (w.pinyin||[]).map(toneAccent).join(" "), getGlosses(w)[0]||""));
-    // Tap any CJK char in a sentence -> pop up pinyin + related words
+    // Tap any CJK char in a sentence -> pop up the WORD it belongs to (if multi-char) or just the char
     cardArea.querySelectorAll(".sentence .sc.han").forEach(el=>{
       el.addEventListener("click", (ev)=>{
         ev.stopPropagation();
-        showCharPopup(el.dataset.ch || el.textContent, el);
+        const wIdx = el.dataset.wordIdx;
+        if (wIdx !== undefined && wIdx !== ""){
+          showWordPopup(parseInt(wIdx,10), el);
+        } else {
+          showCharPopup(el.dataset.ch || el.textContent, el);
+        }
       });
     });
     // Image controls (only present on the back)
@@ -566,8 +621,8 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
         b.addEventListener("click", ()=>grade(parseInt(b.dataset.g)));
       });
     }
-    // autoplay front (only if audio is available)
-    if (!session.showBack && w.path) setTimeout(()=>playAudio(w),150);
+    // Audio plays on the BACK of the card (after the user has tried to recall) — not on the front.
+    if (session.showBack && w.path) setTimeout(()=>playAudio(w),150);
   }
 
   function humanD(d){
@@ -710,8 +765,10 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     const chars = Array.from(w.hanzi);
     const curTones = getTones(w).slice();
     const workingTones = curTones.slice();
-    const extraGlosses = getGlosses(w).slice(1).join("\n");
-    const extraSentences = getSentences(w).slice(1).join("\n");
+    // Use the FULL replacement model: edit every gloss/sentence (originals + extras) directly.
+    const workingGlosses = getGlosses(w).slice();
+    const workingSentences = getSentences(w).slice();
+
     const toneCells = chars.map((c,i)=>{
       const t = workingTones[i]||5;
       return `<span class="tone-cell" data-i="${i}">
@@ -719,86 +776,113 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
         <span class="tn">tone ${t}</span>
       </span>`;
     }).join("");
-    slot.innerHTML = `
-      <div class="edit-panel">
-        <h4>Tone colors — tap a character to cycle 1→2→3→4→5</h4>
-        <div class="tone-editor" id="toneEditor">${toneCells}</div>
-        <div class="row">
-          <h4>Extra meanings (one per line)</h4>
-          <textarea id="glossEdit" rows="3" placeholder="Additional translations, synonyms, notes…">${escapeHtml(extraGlosses)}</textarea>
-        </div>
-        <div class="row">
-          <h4>Extra example sentences (one per line)</h4>
-          <textarea id="sentEdit" rows="3" placeholder="Another sentence using this word…">${escapeHtml(extraSentences)}</textarea>
-        </div>
-        <div class="btns">
-          <button id="editCancel">Cancel</button>
-          <button class="save" id="editSave">Save</button>
-        </div>
+
+    function rowHtml(kind, idx, value){
+      return `<div class="edit-row" data-kind="${kind}" data-i="${idx}">
+        <input type="text" class="edit-input" data-kind="${kind}" data-i="${idx}" value="${escapeHtml(value||"")}" placeholder="${kind==='gloss' ? 'Translation or meaning…' : 'Example sentence…'}">
+        <button class="row-del" data-kind="${kind}" data-i="${idx}" title="Remove">×</button>
       </div>`;
-    slot.querySelectorAll(".tone-cell").forEach(cell=>{
-      cell.addEventListener("click", ()=>{
-        const i = parseInt(cell.dataset.i);
-        const cur = workingTones[i] || 5;
-        const next = cur >= 5 ? 1 : cur + 1;
-        workingTones[i] = next;
-        const tc = cell.querySelector(".tc");
-        tc.className = "tc " + (TONE_CLASS[next]||"t5");
-        cell.querySelector(".tn").textContent = "tone " + next;
+    }
+
+    function render(){
+      slot.innerHTML = `
+        <div class="edit-panel">
+          <h4>Tone colors — tap a character to cycle 1→2→3→4→5</h4>
+          <div class="tone-editor" id="toneEditor">${toneCells}</div>
+          <div class="row">
+            <h4>Translations / meanings</h4>
+            <div id="glossList">
+              ${workingGlosses.map((g,i)=>rowHtml("gloss",i,g)).join("") || '<div class="note" style="font-size:12px;color:#94a3b8">No meanings yet — add one below.</div>'}
+            </div>
+            <button class="add-row" data-kind="gloss" type="button">+ Add another meaning</button>
+          </div>
+          <div class="row">
+            <h4>Example sentences</h4>
+            <div id="sentList">
+              ${workingSentences.map((s,i)=>rowHtml("sentence",i,s)).join("") || '<div class="note" style="font-size:12px;color:#94a3b8">No sentences yet — add one below.</div>'}
+            </div>
+            <button class="add-row" data-kind="sentence" type="button">+ Add another sentence</button>
+          </div>
+          <div class="btns">
+            <button id="editCancel">Cancel</button>
+            <button class="save" id="editSave">Save</button>
+          </div>
+        </div>`;
+
+      // Tone cells
+      slot.querySelectorAll(".tone-cell").forEach(cell=>{
+        cell.addEventListener("click", ()=>{
+          const i = parseInt(cell.dataset.i);
+          const cur = workingTones[i] || 5;
+          const next = cur >= 5 ? 1 : cur + 1;
+          workingTones[i] = next;
+          const tc = cell.querySelector(".tc");
+          tc.className = "tc " + (TONE_CLASS[next]||"t5");
+          cell.querySelector(".tn").textContent = "tone " + next;
+        });
       });
-    });
-    document.getElementById("editCancel").addEventListener("click", ()=>{ slot.innerHTML = ""; });
-    document.getElementById("editSave").addEventListener("click", ()=>{
-      const newG = document.getElementById("glossEdit").value.split(/\r?\n+/).map(s=>s.trim()).filter(s=>s);
-      const newS = document.getElementById("sentEdit").value.split(/\r?\n+/).map(s=>s.trim()).filter(s=>s);
-      const tonesChanged = workingTones.some((t,i)=>t !== w.tones[i]);
-      const entry = Object.assign({}, edits[w.id] || {});
-      if (tonesChanged) entry.tones = workingTones.slice(); else delete entry.tones;
-      if (newG.length) entry.glosses = newG; else delete entry.glosses;
-      if (newS.length) entry.sentences = newS; else delete entry.sentences;
-      if (Object.keys(entry).length) edits[w.id] = entry; else delete edits[w.id];
-      if (saveEditsObj(edits)){
-        // Update CHAR_TONE so future sentence rendering reflects the fix
-        if (tonesChanged){
-          for (let i=0;i<chars.length;i++){ if (workingTones[i]) CHAR_TONE.set(chars[i], workingTones[i]); }
+
+      // Inputs — keep working arrays in sync as the user types
+      slot.querySelectorAll(".edit-input").forEach(inp=>{
+        inp.addEventListener("input", ()=>{
+          const kind = inp.dataset.kind;
+          const i = parseInt(inp.dataset.i, 10);
+          if (kind === "gloss") workingGlosses[i] = inp.value;
+          else workingSentences[i] = inp.value;
+        });
+      });
+
+      // Delete row
+      slot.querySelectorAll(".row-del").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const kind = btn.dataset.kind;
+          const i = parseInt(btn.dataset.i, 10);
+          if (kind === "gloss") workingGlosses.splice(i,1);
+          else workingSentences.splice(i,1);
+          render();
+        });
+      });
+
+      // Add row
+      slot.querySelectorAll(".add-row").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          if (btn.dataset.kind === "gloss") workingGlosses.push("");
+          else workingSentences.push("");
+          render();
+          // Focus the newly-added input
+          const inputs = slot.querySelectorAll(`.edit-input[data-kind="${btn.dataset.kind}"]`);
+          if (inputs.length) inputs[inputs.length-1].focus();
+        });
+      });
+
+      document.getElementById("editCancel").addEventListener("click", ()=>{ slot.innerHTML = ""; });
+      document.getElementById("editSave").addEventListener("click", ()=>{
+        // Trim empties, but PRESERVE the user's intent: empty array means "user removed the original".
+        const newG = workingGlosses.map(s=>s.trim()).filter(s=>s);
+        const newS = workingSentences.map(s=>s.trim()).filter(s=>s);
+        const origG = [w.gloss || ""].filter(s=>s);
+        const origS = [w.sentence || ""].filter(s=>s);
+        const tonesChanged = workingTones.some((t,i)=>t !== (w.tones[i]||5));
+        const glossChanged = newG.length !== origG.length || newG.some((g,i)=>g !== origG[i]);
+        const sentChanged = newS.length !== origS.length || newS.some((s,i)=>s !== origS[i]);
+        const entry = Object.assign({}, edits[w.id] || {});
+        if (tonesChanged) entry.tones = workingTones.slice(); else delete entry.tones;
+        if (glossChanged) entry.glosses = newG; else delete entry.glosses;
+        if (sentChanged) entry.sentences = newS; else delete entry.sentences;
+        if (Object.keys(entry).length) edits[w.id] = entry; else delete edits[w.id];
+        if (saveEditsObj(edits)){
+          if (tonesChanged){
+            for (let i=0;i<chars.length;i++){ if (workingTones[i]) CHAR_TONE.set(chars[i], workingTones[i]); }
+          }
+          renderCard();
         }
-        renderCard();
-      }
-    });
+      });
+    }
+    render();
   }
 
-  // ---- Character lookup popup (Pleco-lite) ----
-  function showCharPopup(char, anchorEl){
-    const existing = document.getElementById("charPop");
-    if (existing) existing.remove();
-    const info = CHAR_INFO.get(char);
-    if (!info){ return; }
-    const pinyinList = [...info.pinyins];
-    const pinyinStr = pinyinList.map(toneAccent).join(" / ") || "";
-    const tonesArr = [...info.tones];
-    const headToneClass = tonesArr.length===1 ? (TONE_CLASS[tonesArr[0]]||"") : "";
-    const words = (info.wordIdx||[]).slice(0,5).map(i=>{
-      const ww = DATA[i];
-      const toneArr = getTones(ww);
-      const pinyin = (ww.pinyin||[]).map(toneAccent).join(" ");
-      return `<div class="ent"><b>${renderHanzi(ww.hanzi, toneArr)}</b><span class="py">${escapeHtml(pinyin)}</span><span class="gl">${escapeHtml((getGlosses(ww)[0])||"")}</span></div>`;
-    }).join("");
-    const pop = document.createElement("div");
-    pop.id = "charPop";
-    pop.className = "char-pop";
-    pop.innerHTML = `
-      <span class="cls" id="charPopClose">✕</span>
-      <div class="hd"><span class="${headToneClass}">${escapeHtml(char)}</span><span class="py">${escapeHtml(pinyinStr)}</span><button class="edit-btn" id="charPopWrite" style="float:right;font-size:11px;padding:3px 8px;margin-top:2px">✍ Write</button></div>
-      ${words || '<div class="note">This character only appears inside longer words in your deck.</div>'}
-    `;
-    document.body.appendChild(pop);
-    document.getElementById("charPopClose").addEventListener("click", ()=>pop.remove());
-    document.getElementById("charPopWrite").addEventListener("click", (ev)=>{
-      ev.stopPropagation();
-      pop.remove();
-      openWriteModal(char, pinyinStr, "");
-    });
-    // Position near the tapped element
+  // ---- Position a popup near an anchor element ----
+  function positionPopup(pop, anchorEl){
     const rect = anchorEl.getBoundingClientRect();
     const popRect = pop.getBoundingClientRect();
     let top = rect.bottom + 8;
@@ -808,6 +892,123 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     if (top + popRect.height > window.innerHeight - 10) top = Math.max(10, rect.top - popRect.height - 8);
     pop.style.top = top + "px";
     pop.style.left = left + "px";
+  }
+
+  // Apply a new tone color to every rendered occurrence of `char` on screen
+  function applyCharToneClass(char, tone){
+    const cls = TONE_CLASS[tone] || "t5";
+    document.querySelectorAll(`.han[data-ch="${CSS.escape(char)}"]`).forEach(el=>{
+      el.classList.remove("t1","t2","t3","t4","t5");
+      el.classList.add(cls);
+    });
+  }
+
+  // Cycle a single character's color override 1→2→3→4→5→1 globally and persist it.
+  function cycleCharTone(char){
+    const cur = (charToneOverrides[char] || CHAR_TONE.get(char) || 5);
+    const next = cur >= 5 ? 1 : cur + 1;
+    charToneOverrides[char] = next;
+    CHAR_TONE.set(char, next);
+    saveCharTonesObj(charToneOverrides);
+    applyCharToneClass(char, next);
+    return next;
+  }
+
+  // ---- Character lookup popup (Pleco-lite) ----
+  function showCharPopup(char, anchorEl){
+    const existing = document.getElementById("charPop");
+    if (existing) existing.remove();
+    const info = CHAR_INFO.get(char);
+    const pinyinList = info ? [...info.pinyins] : [];
+    const pinyinStr = pinyinList.map(toneAccent).join(" / ") || "";
+    const curTone = (charToneOverrides[char] || CHAR_TONE.get(char) || 5);
+    const headToneClass = TONE_CLASS[curTone] || "t5";
+    const words = info ? (info.wordIdx||[]).slice(0,5).map(i=>{
+      const ww = DATA[i];
+      const toneArr = getTones(ww);
+      const pinyin = (ww.pinyin||[]).map(toneAccent).join(" ");
+      return `<div class="ent"><b>${renderHanzi(ww.hanzi, toneArr)}</b><span class="py">${escapeHtml(pinyin)}</span><span class="gl">${escapeHtml((getGlosses(ww)[0])||"")}</span></div>`;
+    }).join("") : "";
+    const pop = document.createElement("div");
+    pop.id = "charPop";
+    pop.className = "char-pop";
+    pop.innerHTML = `
+      <span class="cls" id="charPopClose">✕</span>
+      <div class="hd">
+        <span class="hd-char ${headToneClass}" id="charPopHead" title="Tap to change tone color">${escapeHtml(char)}</span>
+        <span class="py">${escapeHtml(pinyinStr)}</span>
+        <button class="edit-btn" id="charPopWrite" style="float:right;font-size:11px;padding:3px 8px;margin-top:2px">✍ Write</button>
+      </div>
+      <div class="note" style="font-size:11px;margin:2px 0 6px 0;color:#94a3b8">Tap the character above to change its tone color (cycles 1→2→3→4→5).</div>
+      ${words || '<div class="note">This character only appears inside longer words in your deck.</div>'}
+    `;
+    document.body.appendChild(pop);
+    document.getElementById("charPopClose").addEventListener("click", ()=>pop.remove());
+    document.getElementById("charPopWrite").addEventListener("click", (ev)=>{
+      ev.stopPropagation();
+      pop.remove();
+      openWriteModal(char, pinyinStr, "");
+    });
+    document.getElementById("charPopHead").addEventListener("click", (ev)=>{
+      ev.stopPropagation();
+      const head = ev.currentTarget;
+      const next = cycleCharTone(char);
+      head.classList.remove("t1","t2","t3","t4","t5");
+      head.classList.add(TONE_CLASS[next] || "t5");
+    });
+    positionPopup(pop, anchorEl);
+  }
+
+  // ---- Word lookup popup (for multi-char words found in a sentence) ----
+  function showWordPopup(wordIdx, anchorEl){
+    const existing = document.getElementById("charPop");
+    if (existing) existing.remove();
+    const w = DATA[wordIdx];
+    if (!w){ return; }
+    const tones = getTones(w);
+    const pinyin = (w.pinyin||[]).map(toneAccent).join(" ");
+    const glosses = getGlosses(w);
+    const sentences = getSentences(w);
+    const glossesHtml = glosses.length
+      ? glosses.map(g=>`<div class="gl">${escapeHtml(g)}</div>`).join("")
+      : '<div class="note">No translation yet.</div>';
+    const sentencesHtml = sentences.length
+      ? sentences.slice(0,3).map(s=>`<div class="sentence" style="font-size:13px;margin-top:4px">${renderSentence(s)}</div>`).join("")
+      : "";
+    const pop = document.createElement("div");
+    pop.id = "charPop";
+    pop.className = "char-pop";
+    pop.style.maxWidth = "300px";
+    pop.innerHTML = `
+      <span class="cls" id="charPopClose">✕</span>
+      <div class="hd">
+        <b>${renderHanzi(w.hanzi, tones)}</b>
+        <span class="py">${escapeHtml(pinyin)}</span>
+        <button class="edit-btn" id="charPopWrite" style="float:right;font-size:11px;padding:3px 8px;margin-top:2px">✍ Write</button>
+      </div>
+      ${glossesHtml}
+      ${sentencesHtml}
+    `;
+    document.body.appendChild(pop);
+    document.getElementById("charPopClose").addEventListener("click", ()=>pop.remove());
+    document.getElementById("charPopWrite").addEventListener("click", (ev)=>{
+      ev.stopPropagation();
+      pop.remove();
+      openWriteModal(w.hanzi, pinyin, glosses[0] || "");
+    });
+    // Tapping inside the word popup's nested sentences should also open another lookup
+    pop.querySelectorAll(".sentence .sc.han").forEach(el=>{
+      el.addEventListener("click", (ev)=>{
+        ev.stopPropagation();
+        const wIdx = el.dataset.wordIdx;
+        if (wIdx !== undefined && wIdx !== ""){
+          showWordPopup(parseInt(wIdx,10), el);
+        } else {
+          showCharPopup(el.dataset.ch || el.textContent, el);
+        }
+      });
+    });
+    positionPopup(pop, anchorEl);
   }
   // Close popup when tapping outside it
   document.addEventListener("click", (ev)=>{
@@ -1307,6 +1508,11 @@ const DATA = [{"level":"hsk1","idx":1,"hanzi":"爱","path":"hsk1 500/hsk1 1/1 �
     if (!e || !Array.isArray(e.tones)) continue;
     const chars = Array.from(w.hanzi);
     for (let i=0;i<chars.length;i++){ if (e.tones[i]) CHAR_TONE.set(chars[i], e.tones[i]); }
+  }
+  // Apply standalone per-character tone overrides (set via the in-sentence tap-to-fix popup)
+  for (const c in charToneOverrides){
+    const t = charToneOverrides[c];
+    if (t >= 1 && t <= 5) CHAR_TONE.set(c, t);
   }
 
   // ---- Boot ----
