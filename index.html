@@ -234,6 +234,24 @@
   .add-word-form .btns{display:flex;gap:6px;justify-content:flex-end;margin-top:4px}
   .add-word-form button{font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--panel2);color:var(--text)}
   .add-word-form button.save{background:#fbbf24;border-color:#fbbf24;color:#0e1014;font-weight:600}
+  .add-story-btn{margin-top:10px;background:transparent;border:1px dashed #fbbf24;color:#fbbf24;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px}
+  .add-story-btn:hover{background:rgba(251,191,36,.1)}
+  .series-group{margin-bottom:8px}
+  .series-name{font-size:12px;color:#fbbf24;margin:6px 0 4px 4px;font-weight:600}
+  .story-form{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  .story-form label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .story-form label .hint{text-transform:none;color:#94a3b8;font-weight:400;letter-spacing:0;font-size:10px;margin-left:4px}
+  .story-form input[type="text"], .story-form select, .story-form textarea{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;box-sizing:border-box;width:100%}
+  .story-form textarea{resize:vertical;min-height:60px}
+  .story-form input:focus, .story-form select:focus, .story-form textarea:focus{outline:none;border-color:#fbbf24}
+  .story-form .row2{display:flex;gap:10px;flex-wrap:wrap}
+  .story-form .row2 label{flex:1;min-width:160px}
+  .story-form-btns{display:flex;gap:8px;align-items:center;margin-top:6px}
+  .story-form-btns .spacer{flex:1}
+  .story-form-btns button{font-size:13px;padding:8px 16px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--panel2);color:var(--text)}
+  .story-form-btns button.save{background:#fbbf24;border-color:#fbbf24;color:#0e1014;font-weight:600}
+  .story-form-btns button.danger{background:transparent;border-color:#fda4af;color:#fda4af}
+  .story-form-btns button.danger:hover{background:rgba(253,164,175,.1)}
 
   footer{padding:10px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);flex-wrap:wrap;gap:8px}
   .kbd{background:var(--panel2);border:1px solid var(--border);padding:1px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:10px;color:#cbd5e1}
@@ -1607,12 +1625,18 @@ const PASSAGES = [{"id":"p1_1","level":"hsk1","title":"我的朋友","title_en":
   // ---- Graded reader ----
   const READ_KEY = "hsk_read_v1";          // { passageId: {read:true, ts:N} }
   const EXTRA_KEY = "hsk_extra_words_v1";  // [{hanzi, pinyin:[..], tones:[..], gloss, level:"extra"}, ...]
+  const STORIES_KEY = "hsk_my_stories_v1"; // [{id, level, title, title_en, series, hanzi, pinyin, english, custom, ts}, ...]
   function loadRead(){ try{return JSON.parse(localStorage.getItem(READ_KEY))||{}}catch(e){return {}} }
   function saveRead(o){ try{localStorage.setItem(READ_KEY, JSON.stringify(o));return true}catch(e){return false} }
   function loadExtra(){ try{return JSON.parse(localStorage.getItem(EXTRA_KEY))||[]}catch(e){return []} }
   function saveExtra(arr){ try{localStorage.setItem(EXTRA_KEY, JSON.stringify(arr));return true}catch(e){return false} }
+  function loadStories(){ try{return JSON.parse(localStorage.getItem(STORIES_KEY))||[]}catch(e){return []} }
+  function saveStories(arr){ try{localStorage.setItem(STORIES_KEY, JSON.stringify(arr));return true}catch(e){return false} }
   const readState = loadRead();
   const extraWords = loadExtra();
+  const myStories = loadStories();
+  // Merge user stories into PASSAGES so the rest of the reader works without changes.
+  for (const s of myStories){ PASSAGES.push(s); }
 
   // Convert tone-marked syllable like "píng" → {base:"ping", tone:2}
   function parseToneMark(syl){
@@ -1701,7 +1725,20 @@ const PASSAGES = [{"id":"p1_1","level":"hsk1","title":"我的朋友","title_en":
       const span = wordLen || 1;
       for (let k = 0; k < span; k++){
         const cc = chars[i + k];
-        const sy = pyArr[pi] || "";
+        // Pinyin: prefer the passage's explicit syllable; otherwise derive from
+        // the matched word's pinyin, or from CHAR_INFO. Keeps the user from having
+        // to type pinyin for stories they paste in.
+        let sy = pyArr[pi] || "";
+        if (!sy){
+          if (matched && ww.pinyin && ww.pinyin[k]){
+            sy = toneAccent(ww.pinyin[k]);
+          } else {
+            const info = CHAR_INFO.get(cc);
+            if (info && info.pinyins.size){
+              sy = toneAccent([...info.pinyins][0]);
+            }
+          }
+        }
         pi++;
         let tone;
         if (matched && wTones[k]){
@@ -1725,7 +1762,7 @@ const PASSAGES = [{"id":"p1_1","level":"hsk1","title":"我的朋友","title_en":
     return out.join("");
   }
 
-  // Render the list of passages (grouped by HSK level), with progress.
+  // Render the list of passages (grouped by HSK level + a "My Stories" section), with progress.
   function renderReaderList(){
     if (writeSession && writeSession.active){
       for (const w of writeSession.writers){ try { w.cancelQuiz(); } catch(e){} }
@@ -1733,39 +1770,194 @@ const PASSAGES = [{"id":"p1_1","level":"hsk1","title":"我的朋友","title_en":
     }
     restartBtn.style.display = "";
     const byLevel = {hsk1:[], hsk2:[], hsk3:[]};
-    for (const p of PASSAGES){ if (byLevel[p.level]) byLevel[p.level].push(p); }
+    const customs = [];
+    for (const p of PASSAGES){
+      if (p.custom){ customs.push(p); }
+      else if (byLevel[p.level]) byLevel[p.level].push(p);
+    }
     const levelLabels = {hsk1:"HSK 1 — Beginner", hsk2:"HSK 2 — Elementary", hsk3:"HSK 3 — Intermediate"};
     const totalRead = Object.values(readState).filter(x => x && x.read).length;
-    const sections = ["hsk1","hsk2","hsk3"].map(lv => {
-      const items = byLevel[lv].map(p => {
-        const isRead = readState[p.id] && readState[p.id].read;
-        return `<div class="reader-card ${isRead?"read":""}" data-pid="${escapeHtml(p.id)}">
-          <div class="body">
-            <div class="ttl-zh">${escapeHtml(p.title)}</div>
-            <div class="ttl-en">${escapeHtml(p.title_en)}</div>
-          </div>
-          <div class="meta">
-            ${Array.from(p.hanzi).filter(c=>/[一-鿿]/.test(c)).length} 字
-            ${isRead ? '<span class="chk">✓</span>' : ""}
-          </div>
-        </div>`;
+
+    function passageRow(p){
+      const isRead = readState[p.id] && readState[p.id].read;
+      const lvLabel = p.custom ? (p.level ? p.level.toUpperCase() : "CUSTOM") : "";
+      const seriesLine = p.series ? `<div class="ttl-en" style="color:#fbbf24">📚 ${escapeHtml(p.series)}</div>` : "";
+      const customBadge = p.custom ? `<span style="font-size:10px;background:rgba(251,191,36,.15);color:#fbbf24;padding:1px 6px;border-radius:4px;margin-left:6px">${escapeHtml(lvLabel)}</span>` : "";
+      return `<div class="reader-card ${isRead?"read":""}" data-pid="${escapeHtml(p.id)}">
+        <div class="body">
+          <div class="ttl-zh">${escapeHtml(p.title)}${customBadge}</div>
+          ${seriesLine}
+          <div class="ttl-en">${escapeHtml(p.title_en || "")}</div>
+        </div>
+        <div class="meta">
+          ${Array.from(p.hanzi).filter(c=>/[一-鿿]/.test(c)).length} 字
+          ${isRead ? '<span class="chk">✓</span>' : ""}
+        </div>
+      </div>`;
+    }
+
+    // Group customs by series, with un-grouped ones first.
+    let myStoriesHtml = "";
+    if (customs.length){
+      const bySeries = {};
+      const ungrouped = [];
+      for (const p of customs){
+        if (p.series && p.series.trim()){
+          (bySeries[p.series] = bySeries[p.series] || []).push(p);
+        } else {
+          ungrouped.push(p);
+        }
+      }
+      const ungroupedHtml = ungrouped.map(passageRow).join("");
+      const seriesHtml = Object.keys(bySeries).map(name => {
+        const list = bySeries[name].map(passageRow).join("");
+        return `<div class="series-group"><div class="series-name">📚 ${escapeHtml(name)}</div>${list}</div>`;
       }).join("");
+      myStoriesHtml = `
+        <h3>My Stories</h3>
+        ${ungroupedHtml}
+        ${seriesHtml}
+      `;
+    }
+
+    const sections = ["hsk1","hsk2","hsk3"].map(lv => {
+      const items = byLevel[lv].map(passageRow).join("");
       return `<h3>${levelLabels[lv]}</h3>${items}`;
     }).join("");
+
     cardArea.innerHTML = `
       <div class="reader-list">
         <button class="reader-back" id="readerBackHome">← Back to menu</button>
         <div style="text-align:center;margin-bottom:14px">
           <h2 style="margin:0;font-size:22px">📖 Graded Reader</h2>
           <div style="font-size:12px;color:var(--muted);margin-top:4px">${totalRead} of ${PASSAGES.length} passages read</div>
+          <button class="add-story-btn" id="addStoryBtn">+ Add my own story</button>
         </div>
+        ${myStoriesHtml}
         ${sections}
       </div>`;
     document.getElementById("readerBackHome").addEventListener("click", renderWelcome);
+    document.getElementById("addStoryBtn").addEventListener("click", () => showStoryEditor(null));
     cardArea.querySelectorAll(".reader-card").forEach(el => {
       el.addEventListener("click", () => renderReaderPassage(el.dataset.pid));
     });
     updateStats();
+  }
+
+  // ---- Add / Edit a custom story ----
+  // existingId: null to create a new story, or a story.id to edit.
+  function showStoryEditor(existingId){
+    const editing = existingId ? myStories.find(x => x.id === existingId) : null;
+    const existing = document.getElementById("storyModalBg");
+    if (existing) existing.remove();
+    const bg = document.createElement("div");
+    bg.id = "storyModalBg";
+    bg.className = "modal-bg";
+    bg.style.display = "flex";
+    bg.innerHTML = `
+      <div class="modal" style="max-width:640px">
+        <div class="modal-hd">
+          <div class="ttl">${editing ? "Edit story" : "Add a story"}</div>
+          <button class="close" id="storyClose">✕</button>
+        </div>
+        <div class="modal-sub">Tip: leave pinyin blank to auto-fill from your deck. Translation is optional.</div>
+        <div class="story-form">
+          <label>Title <span class="hint">(Chinese)</span>
+            <input type="text" id="stTitle" placeholder="标题…" value="${escapeHtml(editing ? editing.title : "")}">
+          </label>
+          <label>Title <span class="hint">(English, optional)</span>
+            <input type="text" id="stTitleEn" placeholder="Title in English…" value="${escapeHtml(editing ? (editing.title_en||"") : "")}">
+          </label>
+          <div class="row2">
+            <label>Level
+              <select id="stLevel">
+                <option value="hsk1" ${editing && editing.level==="hsk1"?"selected":""}>HSK 1 — Beginner</option>
+                <option value="hsk2" ${editing && editing.level==="hsk2"?"selected":""}>HSK 2 — Elementary</option>
+                <option value="hsk3" ${(!editing||editing.level==="hsk3")?"selected":""}>HSK 3 — Intermediate</option>
+                <option value="custom" ${editing && editing.level==="custom"?"selected":""}>Custom / above HSK 3</option>
+              </select>
+            </label>
+            <label>Series <span class="hint">(optional)</span>
+              <input type="text" id="stSeries" placeholder="e.g. The Detective — Part 1" value="${escapeHtml(editing ? (editing.series||"") : "")}">
+            </label>
+          </div>
+          <label>Chinese text
+            <textarea id="stHanzi" rows="6" placeholder="Paste your story here, in Chinese characters (with punctuation and line breaks)…">${escapeHtml(editing ? editing.hanzi : "")}</textarea>
+          </label>
+          <label>Pinyin <span class="hint">(optional — one syllable per Chinese character, space-separated)</span>
+            <textarea id="stPinyin" rows="3" placeholder="wǒ shì xué sheng …  (leave blank to auto-fill)">${escapeHtml(editing ? (editing.pinyin||"") : "")}</textarea>
+          </label>
+          <label>English translation <span class="hint">(optional)</span>
+            <textarea id="stEnglish" rows="4" placeholder="Translation, for the toggle in the reader…">${escapeHtml(editing ? (editing.english||"") : "")}</textarea>
+          </label>
+          <div class="story-form-btns">
+            ${editing ? '<button id="stDelete" class="danger">Delete</button>' : ""}
+            <div class="spacer"></div>
+            <button id="stCancel">Cancel</button>
+            <button id="stSave" class="save">${editing ? "Save changes" : "Add story"}</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(bg);
+    const closeIt = () => bg.remove();
+    document.getElementById("storyClose").addEventListener("click", closeIt);
+    document.getElementById("stCancel").addEventListener("click", closeIt);
+    bg.addEventListener("click", (ev)=>{ if (ev.target === bg) closeIt(); });
+    if (editing){
+      document.getElementById("stDelete").addEventListener("click", () => {
+        if (!confirm(`Delete “${editing.title}”? This can't be undone.`)) return;
+        const i = myStories.findIndex(x => x.id === editing.id);
+        if (i >= 0){
+          myStories.splice(i, 1);
+          saveStories(myStories);
+          // Drop from PASSAGES too
+          const pi = PASSAGES.findIndex(x => x.id === editing.id);
+          if (pi >= 0) PASSAGES.splice(pi, 1);
+          // Drop read state for this story
+          delete readState[editing.id];
+          saveRead(readState);
+        }
+        closeIt();
+        renderReaderList();
+      });
+    }
+    document.getElementById("stSave").addEventListener("click", () => {
+      const title = document.getElementById("stTitle").value.trim();
+      const titleEn = document.getElementById("stTitleEn").value.trim();
+      const level = document.getElementById("stLevel").value;
+      const series = document.getElementById("stSeries").value.trim();
+      const hanzi = document.getElementById("stHanzi").value.trim();
+      const pinyin = document.getElementById("stPinyin").value.trim();
+      const english = document.getElementById("stEnglish").value.trim();
+      if (!title){ alert("Please enter a title."); return; }
+      if (!hanzi){ alert("Please paste the Chinese text."); return; }
+      // If user provided pinyin, gently validate length matches.
+      if (pinyin){
+        const cjkCount = Array.from(hanzi).filter(c=>/[一-鿿]/.test(c)).length;
+        const sylCount = pinyin.split(/\s+/).filter(Boolean).length;
+        if (sylCount !== cjkCount){
+          if (!confirm(`Heads up: you have ${cjkCount} Chinese characters but ${sylCount} pinyin syllables. They should match 1:1 for proper alignment. Save anyway?`)) return;
+        }
+      }
+      if (editing){
+        Object.assign(editing, {title, title_en:titleEn, level, series, hanzi, pinyin, english});
+        saveStories(myStories);
+        // Update the PASSAGES copy too
+        const pi = PASSAGES.findIndex(x => x.id === editing.id);
+        if (pi >= 0) Object.assign(PASSAGES[pi], editing);
+        closeIt();
+        renderReaderPassage(editing.id);
+      } else {
+        const id = "my_" + Date.now().toString(36);
+        const story = {id, level, title, title_en:titleEn, series, hanzi, pinyin, english, custom:true, ts:Date.now()};
+        myStories.push(story);
+        saveStories(myStories);
+        PASSAGES.push(story);
+        closeIt();
+        renderReaderPassage(id);
+      }
+    });
+    setTimeout(() => { const t = document.getElementById("stTitle"); if (t) t.focus(); }, 60);
   }
 
   // Render one passage in reading mode.
@@ -1778,17 +1970,22 @@ const PASSAGES = [{"id":"p1_1","level":"hsk1","title":"我的朋友","title_en":
     __activePassageId = pid;
     restartBtn.style.display = "";
     const isRead = readState[p.id] && readState[p.id].read;
+    const subParts = [];
+    if (p.title_en) subParts.push(escapeHtml(p.title_en));
+    subParts.push(p.level ? p.level.toUpperCase() : "CUSTOM");
+    if (p.series) subParts.push(`📚 ${escapeHtml(p.series)}`);
     cardArea.innerHTML = `
       <div class="reader-passage">
         <button class="reader-back" id="readerBackList">← All passages</button>
         <h2>${escapeHtml(p.title)}</h2>
-        <div class="sub">${escapeHtml(p.title_en)} · ${p.level.toUpperCase()}</div>
+        <div class="sub">${subParts.join(" · ")}</div>
         <div class="reader-toolbar">
           <button id="togPy" class="${readerPrefs.pinyin?"on":""}">拼音 Pinyin</button>
           <button id="togEn" class="${readerPrefs.english?"on":""}">EN Translation</button>
+          ${p.custom ? '<button id="editStoryBtn">✎ Edit story</button>' : ""}
         </div>
         <div class="reader-body" id="readerBody">${renderPassageText(p, readerPrefs.pinyin)}</div>
-        <div class="reader-english ${readerPrefs.english?"":"hidden"}" id="readerEn">${escapeHtml(p.english)}</div>
+        <div class="reader-english ${readerPrefs.english?"":"hidden"}" id="readerEn">${escapeHtml(p.english||"")}</div>
         <div class="reader-foot">
           <button id="readerPrev">← Prev</button>
           <button id="readerMark" class="${isRead?"":"primary"}">${isRead ? "✓ Read — mark unread" : "Mark as read"}</button>
@@ -1796,6 +1993,10 @@ const PASSAGES = [{"id":"p1_1","level":"hsk1","title":"我的朋友","title_en":
         </div>
       </div>`;
     document.getElementById("readerBackList").addEventListener("click", renderReaderList);
+    if (p.custom){
+      const eb = document.getElementById("editStoryBtn");
+      if (eb) eb.addEventListener("click", () => showStoryEditor(p.id));
+    }
     document.getElementById("togPy").addEventListener("click", () => {
       readerPrefs.pinyin = !readerPrefs.pinyin;
       document.getElementById("togPy").classList.toggle("on", readerPrefs.pinyin);
