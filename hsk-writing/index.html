@@ -43,6 +43,8 @@ h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.3px}
 .lvl .sub{font-size:12px;color:var(--muted);margin-top:3px}
 .lvl .due{position:absolute;top:10px;right:10px;background:var(--tone4);color:#fff;border-radius:20px;font-size:11px;padding:2px 7px;font-weight:700}
 .lvl .new{position:absolute;top:10px;right:10px;background:var(--panel2);color:var(--muted);border-radius:20px;font-size:11px;padding:2px 7px}
+.lvl .bar{margin-top:9px;height:7px;border-radius:6px;background:var(--panel2);overflow:hidden}
+.lvl .bar span{display:block;height:100%;background:var(--good);border-radius:6px;transition:width .4s}
 .study{flex:1;display:flex;flex-direction:column;align-items:center}
 .trans{font-size:22px;font-weight:700;color:var(--trans);text-align:center;line-height:1.25;margin:6px 0 2px}
 .pos{font-size:12px;color:var(--muted);margin-bottom:8px}
@@ -208,7 +210,7 @@ const LEVELS = [
   ["hsk4","HSK 4"],["hsk5","HSK 5"],["hsk6","HSK 6"],
   ["measure","Measure 量词"],["grammar","Grammar 语法"]
 ];
-DATA.forEach((w,i)=>{ w._id = w.level+":"+w.idx; w._i=i; });
+DATA.forEach((w,i)=>{ w._id = w.level+":"+w.hanzi; w._i=i; });
 
 const LS = {settings:"hsk_writer_settings_v1",srs:"hsk_writer_srs_v1",stories:"hsk_writer_stories_v1",sel:"hsk_writer_sel_v1"};
 const DEFAULTS = {charMode:"tone",char:"#eef1f6",trans:"#cfd6e2",
@@ -217,6 +219,8 @@ const DEFAULTS = {charMode:"tone",char:"#eef1f6",trans:"#cfd6e2",
 let settings = Object.assign({}, DEFAULTS, load(LS.settings,{}));
 settings.tones = Object.assign({}, DEFAULTS.tones, settings.tones||{});
 let srs = load(LS.srs,{});
+/* one-time cleanup: drop stale/colliding keys from the old id scheme so progress counts are accurate */
+(function(){ const valid=new Set(DATA.map(w=>w._id)); let ch=false; for(const k in srs){ if(!valid.has(k)){ delete srs[k]; ch=true; } } if(ch) save(LS.srs,srs); })();
 let stories = load(LS.stories,{});
 let selected = load(LS.sel, ["hsk1"]);
 
@@ -314,12 +318,13 @@ function renderHome(){
     const all=DATA.filter(w=>w.level===id);
     const due=all.filter(w=>srs[w._id]&&srs[w._id].due<=todayStamp()).length;
     const learned=all.filter(w=>srs[w._id]).length;
-    const fresh=all.length-learned;
+    const pct = all.length? Math.round(learned/all.length*100):0;
     const d=document.createElement("div");
     d.className="lvl"+(selected.includes(id)?" sel":"");
     d.onclick=()=>toggleLevel(id);
-    d.innerHTML=`<b>${name}</b><div class="sub">${all.length} words · ${learned} started</div>`+
-      (due>0?`<span class="due">${due} due</span>`:`<span class="new">${fresh} new</span>`);
+    d.innerHTML=`<b>${name}</b><div class="sub">${learned} / ${all.length} learned · ${pct}%</div>`+
+      `<div class="bar"><span style="width:${pct}%"></span></div>`+
+      (due>0?`<span class="due">${due} due</span>`:``);
     el.appendChild(d);
   });
   const totDue=DATA.filter(w=>selected.includes(w.level)&&srs[w._id]&&srs[w._id].due<=todayStamp()).length;
