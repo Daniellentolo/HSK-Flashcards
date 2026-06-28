@@ -53,6 +53,9 @@ h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.3px}
 .progressdots{display:flex;gap:6px;margin:4px 0 6px}
 .progressdots i{width:8px;height:8px;border-radius:50%;background:var(--line);display:block}
 .progressdots i.on{background:var(--accent)}
+.progressdots{align-items:center}
+.ctab{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;padding:0}
+.ctab.on{background:var(--accent);color:#181400;border-color:transparent}
 .hint{font-size:13px;color:var(--muted);min-height:18px;text-align:center;margin:2px 0 8px}
 .controls{width:100%;display:flex;flex-direction:column;gap:9px;margin-top:auto}
 .stepname{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -368,7 +371,19 @@ function renderShared(){
   tr.style.color=settings.trans; tr.innerHTML=transHTML(sess.word);
   document.getElementById("posline").textContent=(sess.word.pos?sess.word.pos+" · ":"")+(charCount()>1?`character ${sess.ci+1} of ${charCount()}`:"");
   const dots=document.getElementById("dots"); dots.innerHTML="";
-  for(let i=0;i<charCount();i++){const s=document.createElement("i");if(i<=sess.ci)s.className="on";dots.appendChild(s)}
+  const N=charCount();
+  if(N>1){
+    // tappable character slider — jump between characters within the current step
+    for(let i=0;i<N;i++){
+      const b=document.createElement("button");
+      b.className="ctab"+(i===sess.ci?" on":"");
+      b.textContent=(i+1);
+      b.onclick=()=>{ if(i!==sess.ci) enterStep(sess.step,i); };
+      dots.appendChild(b);
+    }
+  } else {
+    const s=document.createElement("i"); s.className="on"; dots.appendChild(s);
+  }
   updatePinyinUI();
 }
 
@@ -462,73 +477,81 @@ function setControls(html){ document.getElementById("controls").innerHTML=html; 
 function setHint(html,cls){ const h=document.getElementById("hint"); h.innerHTML=html||""; h.className="hint "+(cls||""); }
 function setStep(name){ document.getElementById("stepname").textContent=name; }
 
-function enterStep(step){
-  sess.step=step; renderShared();
-  if(step==="intro"){
-    setStep("New — watch"); setHint("Listen, read the meaning, then watch the stroke order.");
-    const w=makeWriter({showCharacter:false,showOutline:true}); w.animateCharacter();
-    setControls(`
-      <div class="row">
+function togRow(){ return `<div class="row">
         <button class="btn ghost" onclick="toggleComp()">⿰ Breakdown</button>
         <button class="btn ghost" onclick="toggleMne()">✎ Story</button>
         <button class="btn ghost" onclick="toggleConfuse()">⚠ Look-alikes</button>
-      </div>
-      <button class="btn" onclick="enterStep('intro')">↻ Show stroke order again</button>
-      <button class="btn primary" onclick="enterStep('trace')">Trace it →</button>`);
+      </div>`; }
+function nlabel(){ return charCount()>1?` (${sess.ci+1}/${charCount()})`:""; }
+// ci optional: when provided, switch to that character within the step
+function enterStep(step, ci){
+  if(ci!=null) sess.ci=ci;
+  sess.step=step; renderShared();
+  const N=charCount(), last=(sess.ci>=N-1);
+  if(step==="intro"){
+    setStep("Watch"+nlabel()); setHint("Listen, read the meaning, then watch the stroke order.");
+    const w=makeWriter({showCharacter:false,showOutline:true}); w.animateCharacter();
+    const fwd = last
+      ? `<button class="btn primary" onclick="enterStep('trace',0)">Trace it →</button>`
+      : `<button class="btn primary" onclick="enterStep('intro',${sess.ci+1})">Next character →</button>`;
+    setControls(`
+      ${fwd}
+      <button class="btn" onclick="enterStep('intro',${sess.ci})">↻ Show stroke order again</button>
+      ${togRow()}`);
   }
   else if(step==="trace"){
-    setStep("Trace the outline"); setHint("Trace each stroke over the faint character, in order.");
+    setStep("Trace"+nlabel()); setHint("Trace each stroke over the faint character, in order.");
     const w=makeWriter({showCharacter:false,showOutline:true}); sess.mistakes=0;
     w.quiz({ showHintAfterMisses:1, highlightOnComplete:true,
-      onComplete:()=>{ setHint("Nice — outline traced ✓","okflash"); } });
+      onComplete:()=>{ setHint(N>1&&!last?"Traced ✓ — tap Next character":"Traced ✓","okflash"); } });
+    const fwd = last
+      ? `<button class="btn primary" onclick="enterStep('free',0)">Write without help →</button>`
+      : `<button class="btn primary" onclick="enterStep('trace',${sess.ci+1})">Next character →</button>`;
     setControls(`
-      <div class="row">
-        <button class="btn ghost" onclick="toggleComp()">⿰ Breakdown</button>
-        <button class="btn ghost" onclick="toggleMne()">✎ Story</button>
-        <button class="btn ghost" onclick="toggleConfuse()">⚠ Look-alikes</button>
-      </div>
-      <button class="btn" onclick="enterStep('trace')">↻ Start over</button>
-      <button class="btn primary" onclick="enterStep('free')">Write without help →</button>`);
+      ${fwd}
+      <button class="btn" onclick="enterStep('trace',${sess.ci})">↻ Start over</button>
+      <button class="btn ghost" onclick="enterStep('intro',${sess.ci})">‹ Stroke order</button>
+      ${togRow()}`);
   }
   else if(step==="free"){
-    setStep("Write from memory"); setHint("No outline now. Write it — a hint appears after "+settings.learnHint+" misses.");
+    setStep("Write"+nlabel()); setHint("No outline now. Write it — a hint appears after "+settings.learnHint+" misses.");
     const w=makeWriter({showCharacter:false,showOutline:false}); sess.mistakes=0;
     w.quiz({ showHintAfterMisses:settings.learnHint, highlightOnComplete:true,
       onMistake:(d)=>{ setHint("✗ stroke "+(d.strokeNum+1)+" — try again","missflash"); },
       onCorrectStroke:()=>{ setHint("…",""); },
       onComplete:(s)=>{ sess.wordMistakes+=s.totalMistakes; afterCharComplete(); } });
+    const fwd = last ? "" : `<button class="btn primary" onclick="enterStep('free',${sess.ci+1})">Next character →</button>`;
     setControls(`
-      <div class="row">
-        <button class="btn ghost" onclick="toggleComp()">⿰ Breakdown</button>
-        <button class="btn ghost" onclick="toggleMne()">✎ Story</button>
-        <button class="btn ghost" onclick="toggleConfuse()">⚠ Look-alikes</button>
-      </div>
-      <button class="btn" onclick="enterStep('trace')">‹ Back to tracing</button>
-      <button class="btn ghost" onclick="enterStep('free')">↻ Try again</button>`);
+      ${fwd}
+      <button class="btn" onclick="enterStep('free',${sess.ci})">↻ Try again</button>
+      <button class="btn ghost" onclick="enterStep('intro',${sess.ci})">‹ Stroke order</button>
+      ${togRow()}`);
   }
   else if(step==="review"){
-    setStep("Review — write it");
+    setStep("Review"+nlabel());
     const w=makeWriter({showCharacter:false,showOutline:false}); sess.mistakes=0;
     setHint("Recall and write — hint after "+settings.reviewHint+" misses.");
     w.quiz({ showHintAfterMisses:settings.reviewHint, highlightOnComplete:true,
       onMistake:(d)=>{ setHint("✗ stroke "+(d.strokeNum+1),"missflash"); },
       onComplete:(s)=>{ sess.wordMistakes+=s.totalMistakes; afterCharComplete(); } });
+    const fwd = last ? "" : `<button class="btn primary" onclick="enterStep('review',${sess.ci+1})">Next character →</button>`;
     setControls(`
+      ${fwd}
       <div class="row">
         <button class="btn ghost" onclick="toggleComp()">⿰ Breakdown</button>
         <button class="btn ghost" onclick="toggleConfuse()">⚠ Look-alikes</button>
         <button class="btn ghost" onclick="revealOnce()">👁 Show me</button>
       </div>
-      <button class="btn ghost" onclick="enterStep('review')">↻ Restart card</button>`);
+      <button class="btn ghost" onclick="enterStep('review',${sess.ci})">↻ Restart character</button>`);
   }
 }
 function revealOnce(){ if(sess.writer){ try{sess.writer.cancelQuiz&&sess.writer.cancelQuiz()}catch(e){} sess.writer.animateCharacter(); sess.wordMistakes+=2; setHint("Shown — this card will come back sooner.","missflash");
-  setTimeout(()=>enterStep(sess.mode==="learn"?"free":"review"),1500);} }
+  setTimeout(()=>enterStep("review",sess.ci),1500);} }
 
 function afterCharComplete(){
   if(sess.ci < charCount()-1){
-    sess.ci++; setHint("✓ next character","okflash");
-    setTimeout(()=> enterStep(sess.step==="review"?"review":"free"),650);
+    const stage=sess.step; sess.ci++; setHint("✓ next character","okflash");
+    setTimeout(()=> enterStep(stage),650);
   } else {
     if(sess.mode==="learn") markLearned(sess.word, sess.wordMistakes);
     else schedule(sess.word, sess.wordMistakes);
@@ -541,7 +564,7 @@ function showWordDoneControls(){
   const hasAudio = sess.word.path;
   setControls(`
     <button class="btn primary" onclick="nextWord()">Next →</button>
-    <button class="btn ghost" onclick="enterStep('${sess.mode==='learn'?'intro':'review'}')">↻ Practice this again</button>
+    <button class="btn ghost" onclick="sess.wordMistakes=0;enterStep('${sess.mode==='learn'?'intro':'review'}',0)">↻ Practice this again</button>
     <label class="btn ghost" style="text-align:center;cursor:pointer">${hasAudio?'🔊 Replace audio file':'➕ Add audio file'}<input type="file" accept="audio/*" style="display:none" onchange="addAudio(event)"></label>
     <div class="center muted" style="font-size:12px">${sess.queue.length} left in this session</div>`);
 }
