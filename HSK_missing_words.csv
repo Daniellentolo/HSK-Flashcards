@@ -1,0 +1,99 @@
+level,number,hanzi,pinyin,pos,translation,suggested_filename
+hsk1,121,没事,méishì,verb,"to have nothing to do, it doesn't matter",hsk1_121_没事.mp3
+hsk1,127,面条儿,miàntiáor,noun,noodles,hsk1_127_面条儿.mp3
+hsk1,132,哪个,nǎge,pronoun,which one,hsk1_132_哪个.mp3
+hsk1,138,那个,nàge,pronoun,that one,hsk1_138_那个.mp3
+hsk1,147,你好,nǐ hǎo,,hello,hsk1_147_你好.mp3
+hsk1,155,女士,nǚshì,noun,"lady, Ms",hsk1_155_女士.mp3
+hsk1,214,玩,wán,verb,to play,hsk1_214_玩.mp3
+hsk1,239,些,xiē,classifier,measure word for an indefinite amount,hsk1_239_些.mp3
+hsk1,259,一下,yíxià,,"numberclassifier、 once, a little; (in a short while) （adverb）",hsk1_259_一下.mp3
+hsk1,266,有些,yǒuxiē,pronoun、,"some, some of; (somewhat, rather) （adverb）",hsk1_266_有些.mp3
+hsk1,281,这个,zhège,pronoun,this one,hsk1_281_这个.mp3
+hsk2,98,没意思,méi yìsi,,"boring, uninteresting",hsk2_098_没意思.mp3
+hsk2,117,妻子,qīzi,noun,wife,hsk2_117_妻子.mp3
+hsk2,141,踢,tī,verb,to kick,hsk2_141_踢.mp3
+hsk2,180,有时,yǒushí,adverb,sometimes,hsk2_180_有时.mp3
+hsk2,187,丈夫,zhàngfu,noun,husband,hsk2_187_丈夫.mp3
+hsk3,1,阿姨,āyí,noun,aunt,hsk3_001_阿姨.mp3
+hsk3,2,矮,ǎi,adjective,short,hsk3_002_矮.mp3
+hsk3,33,宾馆,bīnguǎn,noun,hotel,hsk3_033_宾馆.mp3
+hsk3,34,冰,bīng,noun、（verb）,ice; (to freeze),hsk3_034_冰.mp3
+hsk3,35,冰激凌,bīngjīlíng,noun,ice cream,hsk3_035_冰激凌.mp3
+hsk3,36,冰箱,bīngxiāng,noun,refrigerator,hsk3_036_冰箱.mp3
+hsk3,39,不见,bújiàn,verb,"to disappear, to not see",hsk3_039_不见.mp3
+hsk3,53,尝,cháng,verb,to taste,hsk3_053_尝.mp3
+hsk3,61,迟到,chídào,verb,to be late,hsk3_061_迟到.mp3
+hsk3,70,聪明,cōngmíng,adjective,"smart, clever",hsk3_070_聪明.mp3
+hsk3,71,打扫,dǎsǎo,verb,to clean,hsk3_071_打扫.mp3
+hsk3,76,大熊猫,dàxióngmāo,noun,giant panda,hsk3_076_大熊猫.mp3
+hsk3,79,担心,dānxīn,verb,to worry,hsk3_079_担心.mp3
+hsk3,80,蛋糕,dàngāo,noun,cake,hsk3_080_蛋糕.mp3
+hsk3,94,电梯,diàntī,noun,elevator,hsk3_094_电梯.mp3
+hsk3,95,电子书,diànzǐshū,noun,e-book,hsk3_095_电子书.mp3
+hsk3,96,丢,diū,verb,"to lose, to throw away",hsk3_096_丢.mp3
+hsk3,108,锻炼,duànliàn,verb,to exercise,hsk3_108_锻炼.mp3
+hsk3,112,耳朵,ěrduo,noun,ear,hsk3_112_耳朵.mp3
+hsk3,113,耳机,ěrjī,noun,earphone,hsk3_113_耳机.mp3
+hsk3,115,发烧,fāshāo,verb,to have a fever,hsk3_115_发烧.mp3
+hsk3,131,夫妻,fūqī,noun,husband and wife,hsk3_131_夫妻.mp3
+hsk3,133,附近,fùjìn,noun,nearby,hsk3_133_附近.mp3
+hsk3,137,感兴趣,gǎn xìngqù,,to be interested in,hsk3_137_感兴趣.mp3
+hsk3,144,高铁,gāotiě,noun,high-speed rail,hsk3_144_高铁.mp3
+hsk3,145,根据,gēnjù,verb、,to base on; according to; (basis) preposition、 （noun）,hsk3_145_根据.mp3
+hsk3,149,工作日,gōngzuòrì,noun,workday,hsk3_149_工作日.mp3
+hsk3,151,刮,guā,verb,"to scrape, to blow",hsk3_151_刮.mp3
+hsk3,156,关于,guānyú,preposition,"about, regarding",hsk3_156_关于.mp3
+hsk3,159,过节,guòjié,verb,to celebrate a festival,hsk3_159_过节.mp3
+hsk3,166,号码,hàomǎ,noun,"number, code",hsk3_166_号码.mp3
+hsk3,170,红绿灯,,hóng-lǜdēng,noun traffic light,hsk3_170_红绿灯.mp3
+hsk3,188,几乎,jīhū,adverb,almost,hsk3_188_几乎.mp3
+hsk3,190,极,jí,adverb,extremely,hsk3_190_极.mp3
+hsk3,193,季,jì,noun,season,hsk3_193_季.mp3
+hsk3,194,季节,jìjié,noun,season,hsk3_194_季节.mp3
+hsk3,200,检票,jiǎnpiào,verb,ticket checking,hsk3_200_检票.mp3
+hsk3,214,姐妹,jiěmèi,noun,sister,hsk3_214_姐妹.mp3
+hsk3,226,开花,kāihuā,verb,to bloom,hsk3_226_开花.mp3
+hsk3,230,看来,kànlái,verb,"it seems, it appears",hsk3_230_看来.mp3
+hsk3,231,可,kě,conjunction、,but; (yet) （adverb）,hsk3_231_可.mp3
+hsk3,242,矿泉水,kuàngquánshuǐ,noun,mineral water,hsk3_242_矿泉水.mp3
+hsk3,249,历史,lìshǐ,noun,history,hsk3_249_历史.mp3
+hsk3,255,聊,liáo,verb,to chat,hsk3_255_聊.mp3
+hsk3,256,聊天儿,liáotiānr,verb,to chat,hsk3_256_聊天儿.mp3
+hsk3,257,了解,liǎojiě,verb,to understand,hsk3_257_了解.mp3
+hsk3,258,邻居,línjū,noun,neighbor,hsk3_258_邻居.mp3
+hsk3,261,楼梯,lóutī,noun,stairs,hsk3_261_楼梯.mp3
+hsk3,273,名人,míngrén,noun,famous person,hsk3_273_名人.mp3
+hsk3,291,拍照,pāizhào,verb,to take a photo,hsk3_291_拍照.mp3
+hsk3,292,盘子,pánzi,noun,plate,hsk3_292_盘子.mp3
+hsk3,304,铅笔,qiānbǐ,noun,pencil,hsk3_304_铅笔.mp3
+hsk3,320,伞,sǎn,noun,umbrella,hsk3_320_伞.mp3
+hsk3,321,扫,sǎo,verb,to sweep,hsk3_321_扫.mp3
+hsk3,325,勺子,sháozi,noun,spoon,hsk3_325_勺子.mp3
+hsk3,327,身高,shēngāo,noun,height,hsk3_327_身高.mp3
+hsk3,328,声,shēng,noun、classifier,"sound, voice; measure word for sounds",hsk3_328_声.mp3
+hsk3,339,瘦,shòu,adjective,"thin, slim",hsk3_339_瘦.mp3
+hsk3,341,叔叔,shūshu,noun,uncle,hsk3_341_叔叔.mp3
+hsk3,343,数学,shùxué,noun,mathematics,hsk3_343_数学.mp3
+hsk3,344,刷,shuā,verb,"to brush, to scrub",hsk3_344_刷.mp3
+hsk3,348,四季,sìjì,noun,four seasons,hsk3_348_四季.mp3
+hsk3,370,晚点,wǎndiǎn,verb,to be late,hsk3_370_晚点.mp3
+hsk3,383,西瓜,xīguā,noun,watermelon,hsk3_383_西瓜.mp3
+hsk3,386,喜爱,,xǐ’ài,"verb to like, to love",hsk3_386_喜爱.mp3
+hsk3,393,箱子,xiāngzi,noun,"box, case",hsk3_393_箱子.mp3
+hsk3,397,小区,xiǎoqū,noun,residential community,hsk3_397_小区.mp3
+hsk3,405,新鲜,xīnxiān,adjective,fresh,hsk3_405_新鲜.mp3
+hsk3,410,兴趣,xìngqù,noun,interest,hsk3_410_兴趣.mp3
+hsk3,414,选择,xuǎnzé,verb,to choose,hsk3_414_选择.mp3
+hsk3,416,牙,yá,noun,tooth,hsk3_416_牙.mp3
+hsk3,417,牙刷,yáshuā,noun,toothbrush,hsk3_417_牙刷.mp3
+hsk3,438,饮料,yǐnliào,noun,beverage,hsk3_438_饮料.mp3
+hsk3,446,有关,yǒuguān,verb、preposition,to have to do with; concerning,hsk3_446_有关.mp3
+hsk3,450,羽毛球,yǔmáoqiú,noun,badminton,hsk3_450_羽毛球.mp3
+hsk3,452,雨衣,yǔyī,noun,raincoat,hsk3_452_雨衣.mp3
+hsk3,453,遇到,yùdào,verb,to encounter,hsk3_453_遇到.mp3
+hsk3,454,遇见,yùjiàn,verb,to meet,hsk3_454_遇见.mp3
+hsk3,455,园,yuán,noun,garden,hsk3_455_园.mp3
+hsk3,460,运动会,yùndònghuì,noun,sports meet,hsk3_460_运动会.mp3
+hsk3,461,运动员,yùndòngyuán,noun,athlete,hsk3_461_运动员.mp3
+hsk3,469,着急,zháojí,adjective,anxious,hsk3_469_着急.mp3
