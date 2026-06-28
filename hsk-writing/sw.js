@@ -1,5 +1,5 @@
 /* HSK Writing service worker — scoped to /hsk-writing/ so it never touches the flashcard PWA */
-const SHELL="hskw-shell-v2";
+const SHELL="hskw-shell-v3";
 const RUN="hskw-runtime-v1";
 const SHELL_ASSETS=[
   "./","./index.html","./manifest.json",
