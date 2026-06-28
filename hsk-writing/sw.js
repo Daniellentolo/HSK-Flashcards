@@ -1,9 +1,9 @@
 /* HSK Writing service worker — scoped to /hsk-writing/ so it never touches the flashcard PWA */
-const SHELL="hskw-shell-v1";
+const SHELL="hskw-shell-v2";
 const RUN="hskw-runtime-v1";
 const SHELL_ASSETS=[
   "./","./index.html","./manifest.json",
-  "../icon-192.png","../icon-512.png","../apple-touch-icon.png","../favicon-32.png",
+  "../icon-writing-192.png","../icon-writing-512.png","../apple-touch-icon-writing.png",
   "https://cdn.jsdelivr.net/npm/hanzi-writer@3.5.0/dist/hanzi-writer.min.js"
 ];
 self.addEventListener("install",e=>{
