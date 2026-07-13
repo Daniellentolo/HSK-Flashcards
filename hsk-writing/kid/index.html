@@ -121,6 +121,12 @@ select,input[type=number]{background:var(--panel2);border:1px solid var(--line);
         <button class="iconbtn" onclick="playCurrentAudio()">🔊</button>
       </div>
     </div>
+    <div class="scriptrow" style="display:flex;justify-content:center;margin:6px 0 2px">
+      <div class="seg" id="scriptSegStudy" style="max-width:300px;width:100%">
+        <button data-s="simp" onclick="setScript('simp')">简 Simplified</button>
+        <button data-s="trad" onclick="setScript('trad')">繁 Traditional</button>
+      </div>
+    </div>
     <div class="progressdots" id="dots"></div>
     <div class="trans" id="trans"></div>
     <div class="pos muted" id="posline"></div>
@@ -376,6 +382,7 @@ function curTone(){ const t=sess.word.tones; return (t&&t[sess.ci]!=null)?t[sess
 function charCount(){ return wordChars(sess.word).length; }
 
 function renderShared(){
+  syncScriptSeg();
   const tr=document.getElementById("trans");
   tr.style.color=settings.trans; tr.innerHTML=transHTML(sess.word);
   document.getElementById("posline").textContent=(sess.word.pos?sess.word.pos+" · ":"")+(charCount()>1?`character ${sess.ci+1} of ${charCount()}`:"");
@@ -611,7 +618,7 @@ function openSettings(){ syncSettingsUI(); show("settings"); }
 function closeSettings(){ show("home"); renderHome(); }
 function syncSettingsUI(){
   document.querySelectorAll("#charModeSeg button").forEach(b=>b.classList.toggle("on",b.dataset.m===settings.charMode));
-  document.querySelectorAll("#scriptSeg button").forEach(b=>b.classList.toggle("on",b.dataset.s===(settings.script||"simp")));
+  syncScriptSeg();
   document.getElementById("customCharRow").style.display=settings.charMode==="custom"?"flex":"none";
   document.getElementById("charColor").value=settings.char;
   document.getElementById("transColor").value=settings.trans;
@@ -622,6 +629,7 @@ function syncSettingsUI(){
 }
 function setCharMode(m){ settings.charMode=m; saveSettings(); syncSettingsUI(); applyTheme(); }
 function setScript(m){ settings.script=m; saveSettings(); syncSettingsUI(); if(typeof sess!=="undefined"&&sess.word) enterStep(sess.step, sess.ci); }
+function syncScriptSeg(){ const s=settings.script||"simp"; document.querySelectorAll("#scriptSeg button,#scriptSegStudy button").forEach(b=>b.classList.toggle("on",b.dataset.s===s)); }
 function setVar(k,v){ settings[k]=v; saveSettings(); applyTheme(); }
 function setTone(i,v){ settings.tones[i]=v; saveSettings(); applyTheme(); }
 function setNum(k,v){ settings[k]=Math.max(1,Math.min(5,+v||1)); saveSettings(); }
